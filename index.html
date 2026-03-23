@@ -1574,11 +1574,19 @@ function selectOrBuyItem(item){
   }
   if(item.cost>0){
     if(state.xp>=item.cost){
-      // confirm purchase modal
       openPurchaseModal(item);
     } else {
       showToast(`Need ${item.cost-state.xp} more XP to buy!`);
     }
+  } else {
+    // Free item — add to owned and apply immediately
+    state.ownedItems.add(item.id);
+    if(item.cat==='pet'){setPet(item.id);}
+    else if(item.cat==='hair'){state.avatar.hair=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}
+    else if(item.cat==='bottom'){state.avatar.bottom=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}
+    else{state.avatar[item.cat]=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}
+    renderAvItems();
+    showToast(item.label+' selected!');
   }
 }
 
@@ -1591,13 +1599,10 @@ function openPurchaseModal(item){
     state.xp-=item.cost;
     state.ownedItems.add(item.id);
     closeModal();
-    if(item.cat==='pet')setPet(item.id);
-    else{if(item.cat==='skin'&&item.hair&&!item.skin){
-      // hair colour override — store separately
-      state.avatar.hair=item.id;
-    } else {
-      state.avatar[item.cat]=item.id;
-    }drawAvatar('avatar-canvas');renderMiniAvatar();}
+    if(item.cat==='pet'){setPet(item.id);}
+    else if(item.cat==='hair'){state.avatar.hair=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}
+    else if(item.cat==='bottom'){state.avatar.bottom=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}
+    else{state.avatar[item.cat]=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}
     renderAvItems();renderShop();renderPets();
     document.getElementById('av-xp').textContent=state.xp;
     document.getElementById('shop-xp').textContent=state.xp;
@@ -3678,7 +3683,11 @@ async function sbLoadAll() {
     if (st) {
       state.xp = st.xp || state.xp;
       if (st.avatar && Object.keys(st.avatar).length) state.avatar = {...state.avatar,...st.avatar};
-      if (st.owned_items && st.owned_items.length) state.ownedItems = new Set(st.owned_items);
+      if (st.owned_items && st.owned_items.length) {
+        state.ownedItems = new Set(st.owned_items);
+        // Always ensure free items are owned
+        AV_CATALOGUE.filter(x=>x.cost===0&&x.milestoneXP===0).forEach(x=>state.ownedItems.add(x.id));
+      }
       if (st.home_layout) state.homeLayout = st.home_layout;
       if (st.monster_collection) monsterState.collection = st.monster_collection;
       if (st.active_monster_id) monsterState.activeMonsterId = st.active_monster_id;
