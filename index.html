@@ -768,8 +768,12 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
       <div class="wk-toolbar">
         <button class="wk-tool-btn active" id="wk-pen" onclick="setWorkingTool('pen')">✏️ Pen</button>
         <button class="wk-tool-btn" id="wk-erase" onclick="setWorkingTool('erase')">🧹 Erase</button>
+        <div style="width:1px;background:#e5e7eb;margin:0 2px"></div>
+        <button class="wk-tool-btn active" id="wk-paper-plain" onclick="setWorkingPaper('plain')" title="Plain paper">📄</button>
+        <button class="wk-tool-btn" id="wk-paper-grid" onclick="setWorkingPaper('grid')" title="Grid paper">⊞</button>
+        <button class="wk-tool-btn" id="wk-paper-graph" onclick="setWorkingPaper('graph')" title="Graph paper">📊</button>
         <div style="flex:1"></div>
-        <button onclick="clearWorkingSpace()" style="padding:3px 8px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;font-family:'Nunito','Segoe UI',-apple-system,sans-serif;font-size:10px;font-weight:700;cursor:pointer;color:#6b7280">Clear</button>
+        <button onclick="clearWorkingSpace()" style="padding:3px 8px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;color:#6b7280">Clear</button>
       </div>
       <div class="wk-canvas-wrap">
         <canvas id="working-canvas"></canvas>
@@ -1069,6 +1073,30 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
     <div id="qba-dots" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px"></div>
     <div id="qba-q" style="font-size:15px;font-weight:800;color:#1a1a2e;margin-bottom:12px;line-height:1.5;min-height:44px"></div>
     <div id="qba-opts" class="pq-opts" style="margin-bottom:8px"></div>
+
+    <!-- Working out space (shared paper type with maths) -->
+    <div id="qba-working-space" style="margin:10px 0">
+      <details style="background:#f0f9ff;border-radius:10px;border:1.5px solid #bae6fd;overflow:hidden">
+        <summary style="padding:8px 12px;font-size:11px;font-weight:800;color:#0369a1;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px">
+          📝 Working out space <span style="font-size:10px;color:#64748b;font-weight:600">(tap to open)</span>
+        </summary>
+        <div style="padding:0 8px 8px">
+          <div class="wk-toolbar">
+            <button class="wk-tool-btn active" id="wk2-pen" onclick="setWorkingTool2('pen')">✏️ Pen</button>
+            <button class="wk-tool-btn" id="wk2-erase" onclick="setWorkingTool2('erase')">🧹 Erase</button>
+            <div style="width:1px;background:#e5e7eb;margin:0 2px"></div>
+            <button class="wk-tool-btn active" id="wk2-paper-plain" onclick="setWorkingPaper('plain')" title="Plain">📄</button>
+            <button class="wk-tool-btn" id="wk2-paper-grid" onclick="setWorkingPaper('grid')" title="Grid">⊞</button>
+            <button class="wk-tool-btn" id="wk2-paper-graph" onclick="setWorkingPaper('graph')" title="Graph">📊</button>
+            <div style="flex:1"></div>
+            <button onclick="clearWorkingSpace2()" style="padding:3px 8px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;color:#6b7280">Clear</button>
+          </div>
+          <div class="wk-canvas-wrap">
+            <canvas id="working-canvas-2"></canvas>
+          </div>
+        </div>
+      </details>
+    </div>
     <div id="qba-feedback" style="font-size:13px;font-weight:700;min-height:20px;text-align:center"></div>
     <div id="qba-result" style="display:none;text-align:center;padding:10px 0">
       <div style="font-size:36px;margin-bottom:8px">🎉</div>
@@ -3457,11 +3485,11 @@ function initWorkingSpace() {
   if (!canvas) return;
   var W = canvas.offsetWidth || 300;
   canvas.width = W * window.devicePixelRatio;
-  canvas.height = 160 * window.devicePixelRatio;
-  canvas.style.height = '160px';
+  canvas.height = 260 * window.devicePixelRatio;
+  canvas.style.height = '260px';
   workingCtx = canvas.getContext('2d');
   workingCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  drawGrid(workingCtx, W, 160);
+  drawBackground(workingCtx, W, 260);
   canvas.onpointerdown = function(e) {
     workingDrawing = true;
     workingCtx.beginPath();
@@ -3482,6 +3510,74 @@ function initWorkingSpace() {
   canvas.onpointerup = function() { workingDrawing = false; };
 }
 
+var workingPaper = 'plain';
+
+function setWorkingPaper(type) {
+  workingPaper = type;
+  ['plain','grid','graph'].forEach(t => {
+    const b = document.getElementById('wk-paper-'+t);
+    if (b) b.className = 'wk-tool-btn' + (t===type?' active':'');
+  });
+  // Also update qbank paper buttons if visible
+  ['plain','grid','graph'].forEach(t => {
+    const b = document.getElementById('wk2-paper-'+t);
+    if (b) b.className = 'wk-tool-btn' + (t===type?' active':'');
+  });
+  redrawWorking();
+  redrawWorking2();
+}
+
+function redrawWorking() {
+  if (!workingCtx) return;
+  var canvas = document.getElementById('working-canvas');
+  if (!canvas) return;
+  var W = canvas.offsetWidth || 300;
+  // Preserve drawing
+  var tmp = document.createElement('canvas');
+  tmp.width = canvas.width; tmp.height = canvas.height;
+  tmp.getContext('2d').drawImage(canvas, 0, 0);
+  drawBackground(workingCtx, W, 260);
+  workingCtx.drawImage(tmp, 0, 0, canvas.width, canvas.height, 0, 0, W, 260);
+}
+
+function redrawWorking2() {
+  if (!working2Ctx) return;
+  var canvas = document.getElementById('working-canvas-2');
+  if (!canvas) return;
+  var W = canvas.offsetWidth || 300;
+  var tmp = document.createElement('canvas');
+  tmp.width = canvas.width; tmp.height = canvas.height;
+  tmp.getContext('2d').drawImage(canvas, 0, 0);
+  drawBackground(working2Ctx, W, 260);
+  working2Ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height, 0, 0, W, 260);
+}
+
+function drawBackground(ctx, W, H) {
+  if (workingPaper === 'plain') {
+    drawPlain(ctx, W, H);
+  } else if (workingPaper === 'grid') {
+    drawGrid(ctx, W, H);
+  } else {
+    drawGraphPaper(ctx, W, H);
+  }
+}
+
+function drawPlain(ctx, W, H) {
+  ctx.fillStyle = '#fffef5';
+  ctx.fillRect(0, 0, W, H);
+  // Ruled lines like exercise book
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 0.8;
+  var lineSpacing = 24;
+  for (var y = lineSpacing; y < H; y += lineSpacing) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  // Margin line
+  ctx.strokeStyle = '#fca5a5';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(36, 0); ctx.lineTo(36, H); ctx.stroke();
+}
+
 function drawGrid(ctx, W, H) {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, W, H);
@@ -3494,7 +3590,6 @@ function drawGrid(ctx, W, H) {
   for (var y = 0; y <= H; y += gridSize) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
   }
-  // Darker every 4 squares
   ctx.strokeStyle = '#bfdbfe';
   ctx.lineWidth = 0.8;
   for (var x2 = 0; x2 <= W; x2 += gridSize*4) {
@@ -3505,11 +3600,42 @@ function drawGrid(ctx, W, H) {
   }
 }
 
+function drawGraphPaper(ctx, W, H) {
+  ctx.fillStyle = '#f0f9ff';
+  ctx.fillRect(0, 0, W, H);
+  var small = 8, large = 40;
+  // Small grid
+  ctx.strokeStyle = '#bae6fd';
+  ctx.lineWidth = 0.4;
+  for (var x = 0; x <= W; x += small) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (var y = 0; y <= H; y += small) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  // Large grid (every 5 squares)
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 0.9;
+  for (var x2 = 0; x2 <= W; x2 += large) {
+    ctx.beginPath(); ctx.moveTo(x2, 0); ctx.lineTo(x2, H); ctx.stroke();
+  }
+  for (var y2 = 0; y2 <= H; y2 += large) {
+    ctx.beginPath(); ctx.moveTo(0, y2); ctx.lineTo(W, y2); ctx.stroke();
+  }
+  // Axes in center
+  ctx.strokeStyle = '#0284c7';
+  ctx.lineWidth = 1.5;
+  var midX = Math.round(W/2/large)*large;
+  var midY = Math.round(H/2/large)*large;
+  ctx.beginPath(); ctx.moveTo(midX, 0); ctx.lineTo(midX, H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(W, midY); ctx.stroke();
+}
+
 function clearWorkingSpace() {
   if (!workingCtx) return;
   var canvas = document.getElementById('working-canvas');
   var W = canvas.offsetWidth || 300;
-  drawGrid(workingCtx, W, 160);
+  drawBackground(workingCtx, W, 260);
 }
 
 function setWorkingTool(tool) {
@@ -5885,6 +6011,71 @@ setTimeout(()=>{
     });
   }
 },100);
+
+// ── SECOND WORKING SPACE (qbank/science/geo/history) ─────────
+var working2Ctx = null;
+var working2Drawing = false;
+var working2Tool = 'pen';
+
+function initWorkingSpace2() {
+  var canvas = document.getElementById('working-canvas-2');
+  if (!canvas) return;
+  var W = canvas.offsetWidth || 300;
+  if (W < 10) W = 300;
+  canvas.width = W * window.devicePixelRatio;
+  canvas.height = 260 * window.devicePixelRatio;
+  canvas.style.height = '260px';
+  working2Ctx = canvas.getContext('2d');
+  working2Ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  drawBackground(working2Ctx, W, 260);
+
+  canvas.onpointerdown = function(e) {
+    working2Drawing = true;
+    working2Ctx.beginPath();
+    var p = getCanvasPos(e, canvas);
+    working2Ctx.moveTo(p.x, p.y);
+    canvas.setPointerCapture(e.pointerId);
+  };
+  canvas.onpointermove = function(e) {
+    if (!working2Drawing) return;
+    var p = getCanvasPos(e, canvas);
+    working2Ctx.lineTo(p.x, p.y);
+    working2Ctx.strokeStyle = working2Tool === 'erase' ? '#ffffff' : workingColor;
+    working2Ctx.lineWidth   = working2Tool === 'erase' ? 18 : 2.5;
+    working2Ctx.lineCap = 'round'; working2Ctx.lineJoin = 'round';
+    working2Ctx.stroke();
+    working2Ctx.beginPath(); working2Ctx.moveTo(p.x, p.y);
+  };
+  canvas.onpointerup = function() { working2Drawing = false; };
+}
+
+function setWorkingTool2(tool) {
+  working2Tool = tool;
+  document.getElementById('wk2-pen').className  = 'wk-tool-btn' + (tool==='pen'?' active':'');
+  document.getElementById('wk2-erase').className = 'wk-tool-btn' + (tool==='erase'?' active':'');
+}
+
+function clearWorkingSpace2() {
+  if (!working2Ctx) return;
+  var canvas = document.getElementById('working-canvas-2');
+  var W = canvas.offsetWidth || 300;
+  drawBackground(working2Ctx, W, 260);
+}
+
+// Initialise working-canvas-2 whenever qbank opens
+const _origOpenQBank = openQBankActivity;
+openQBankActivity = function(task) {
+  _origOpenQBank(task);
+  setTimeout(function() {
+    initWorkingSpace2();
+    // Sync paper type buttons
+    ['plain','grid','graph'].forEach(t => {
+      var b = document.getElementById('wk2-paper-'+t);
+      if (b) b.className = 'wk-tool-btn' + (t===workingPaper?' active':'');
+    });
+  }, 100);
+};
+
 </script>
 </body>
 </html>
