@@ -170,6 +170,38 @@ select.fi{background:#fff}
       </div>
     </div>
 
+
+    <!-- Maths Quiz Bank -->
+    <div class="card" id="quiz-bank-card">
+      <div class="ctitle">📐 Maths Quiz Bank</div>
+      <p style="font-size:12px;color:#64748b;margin-bottom:12px">Pick a category and subcategory, choose how many questions, then insert them straight into a task.</p>
+
+      <div class="fr">
+        <div class="fl">Category</div>
+        <select id="qb-cat" class="fi" onchange="qbLoadSubs()"></select>
+      </div>
+      <div class="fr">
+        <div class="fl">Topic</div>
+        <select id="qb-sub" class="fi"></select>
+      </div>
+      <div class="fr">
+        <div class="fl">Questions</div>
+        <select id="qb-count" class="fi" style="max-width:80px">
+          <option value="5">5</option>
+          <option value="8">8</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+        <select id="qb-task" class="fi" style="max-width:200px">
+          <option value="">— insert into task —</option>
+        </select>
+        <button class="btn bp sm" onclick="qbInsert()">Insert ✓</button>
+      </div>
+      <div id="qb-preview" style="display:none;margin-top:10px;background:#f8faff;border-radius:12px;padding:12px;border:1.5px solid #c7d2fe;font-size:12px;line-height:1.8;max-height:240px;overflow-y:auto;white-space:pre-wrap;font-family:monospace"></div>
+      <button id="qb-preview-btn" onclick="qbPreview()" style="width:100%;margin-top:8px;padding:8px;border-radius:9px;border:1.5px solid #c7d2fe;background:#f8faff;color:#4f46e5;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">👁 Preview questions</button>
+    </div>
+
     <div class="card">
       <div class="ctitle">💭 Mood — today</div>
       <div id="mlist"><p style="color:#94a3b8;font-size:13px">Loading…</p></div>
@@ -206,7 +238,7 @@ window.addEventListener('load',async()=>{
 function sw(id){['scr-load','scr-pin','scr-admin'].forEach(s=>{const el=document.getElementById(s);el.style.display=s===id?(s==='scr-admin'?'block':'flex'):'none';});}
 
 function checkPin(){
-  if(document.getElementById('pin').value===PIN){sw('scr-admin');loadAll();}
+  if(document.getElementById('pin').value===PIN){sw('scr-admin');loadAll().then(()=>{qbInit();qbRefreshTaskList();});}
   else{document.getElementById('perr').textContent='Incorrect PIN';document.getElementById('pin').value='';setTimeout(()=>document.getElementById('perr').textContent='',1500);}
 }
 
@@ -685,6 +717,599 @@ async function callAI(system, userMsg) {
   const data = await resp.json();
   return (data.content?.[0]?.text || '').replace(/\`\`\`json|\`\`\`/g, '').trim();
 }
+
+
+// ════════════════════════════════════════════════════════════
+// MATHS QUIZ BANK
+// ════════════════════════════════════════════════════════════
+
+const MATHS_BANK = {
+  addition: {
+    label: 'Addition',
+    icon: '➕',
+    subcategories: {
+      yr3: { label: 'Year 3 (2-3 digit)', questions: [
+        { q: '45 + 32 = ?', a: '77' }, { q: '63 + 24 = ?', a: '87' }, { q: '71 + 18 = ?', a: '89' },
+        { q: '56 + 37 = ?', a: '93' }, { q: '48 + 45 = ?', a: '93' }, { q: '124 + 53 = ?', a: '177' },
+        { q: '236 + 41 = ?', a: '277' }, { q: '155 + 34 = ?', a: '189' }, { q: '247 + 32 = ?', a: '279' },
+        { q: '163 + 25 = ?', a: '188' }, { q: '58 + 29 = ?', a: '87' }, { q: '76 + 18 = ?', a: '94' },
+        { q: '84 + 37 = ?', a: '121' }, { q: '67 + 45 = ?', a: '112' }, { q: '138 + 47 = ?', a: '185' },
+      ]},
+      yr4: { label: 'Year 4 (3-4 digit)', questions: [
+        { q: '346 + 253 = ?', a: '599' }, { q: '472 + 315 = ?', a: '787' }, { q: '584 + 213 = ?', a: '797' },
+        { q: '637 + 248 = ?', a: '885' }, { q: '756 + 134 = ?', a: '890' }, { q: '1245 + 332 = ?', a: '1577' },
+        { q: '2364 + 415 = ?', a: '2779' }, { q: '3152 + 647 = ?', a: '3799' }, { q: '4231 + 358 = ?', a: '4589' },
+        { q: '5146 + 243 = ?', a: '5389' }, { q: '428 + 365 = ?', a: '793' }, { q: '547 + 286 = ?', a: '833' },
+        { q: '693 + 178 = ?', a: '871' }, { q: '824 + 376 = ?', a: '1200' }, { q: '957 + 246 = ?', a: '1203' },
+      ]},
+      yr56: { label: 'Year 5-6 (large numbers)', questions: [
+        { q: '3456 + 2347 = ?', a: '5803' }, { q: '5678 + 1234 = ?', a: '6912' }, { q: '7891 + 2345 = ?', a: '10236' },
+        { q: '12456 + 3241 = ?', a: '15697' }, { q: '23457 + 11234 = ?', a: '34691' },
+        { q: '34.5 + 12.3 = ?', a: '46.8' }, { q: '56.7 + 23.4 = ?', a: '80.1' }, { q: '78.9 + 11.2 = ?', a: '90.1' },
+        { q: '45.6 + 34.7 = ?', a: '80.3' }, { q: '67.8 + 22.5 = ?', a: '90.3' },
+        { q: '1/4 + 1/4 = ?', a: '1/2' }, { q: '1/3 + 1/3 = ?', a: '2/3' }, { q: '2/5 + 1/5 = ?', a: '3/5' },
+        { q: '3/8 + 3/8 = ?', a: '3/4' }, { q: '1/6 + 2/6 = ?', a: '1/2' },
+      ]},
+    }
+  },
+  subtraction: {
+    label: 'Subtraction',
+    icon: '➖',
+    subcategories: {
+      yr3: { label: 'Year 3', questions: [
+        { q: '87 - 34 = ?', a: '53' }, { q: '95 - 42 = ?', a: '53' }, { q: '76 - 23 = ?', a: '53' },
+        { q: '63 - 28 = ?', a: '35' }, { q: '84 - 37 = ?', a: '47' }, { q: '156 - 43 = ?', a: '113' },
+        { q: '278 - 54 = ?', a: '224' }, { q: '345 - 123 = ?', a: '222' }, { q: '467 - 234 = ?', a: '233' },
+        { q: '589 - 265 = ?', a: '324' }, { q: '72 - 45 = ?', a: '27' }, { q: '91 - 46 = ?', a: '45' },
+        { q: '83 - 57 = ?', a: '26' }, { q: '100 - 37 = ?', a: '63' }, { q: '200 - 84 = ?', a: '116' },
+      ]},
+      yr4: { label: 'Year 4', questions: [
+        { q: '756 - 324 = ?', a: '432' }, { q: '893 - 451 = ?', a: '442' }, { q: '674 - 238 = ?', a: '436' },
+        { q: '952 - 347 = ?', a: '605' }, { q: '831 - 465 = ?', a: '366' }, { q: '4567 - 2345 = ?', a: '2222' },
+        { q: '7823 - 3412 = ?', a: '4411' }, { q: '6541 - 2318 = ?', a: '4223' }, { q: '9874 - 4562 = ?', a: '5312' },
+        { q: '5000 - 2347 = ?', a: '2653' }, { q: '1000 - 456 = ?', a: '544' }, { q: '2000 - 873 = ?', a: '1127' },
+        { q: '5000 - 1234 = ?', a: '3766' }, { q: '10000 - 4567 = ?', a: '5433' }, { q: '3000 - 1458 = ?', a: '1542' },
+      ]},
+      yr56: { label: 'Year 5-6', questions: [
+        { q: '12345 - 6789 = ?', a: '5556' }, { q: '23456 - 11234 = ?', a: '12222' }, { q: '45678 - 23456 = ?', a: '22222' },
+        { q: '78.9 - 34.5 = ?', a: '44.4' }, { q: '56.7 - 23.4 = ?', a: '33.3' }, { q: '90.5 - 45.8 = ?', a: '44.7' },
+        { q: '3/4 - 1/4 = ?', a: '1/2' }, { q: '5/6 - 1/6 = ?', a: '2/3' }, { q: '7/8 - 3/8 = ?', a: '1/2' },
+        { q: '4/5 - 2/5 = ?', a: '2/5' }, { q: '100 - 37.5 = ?', a: '62.5' }, { q: '50 - 18.75 = ?', a: '31.25' },
+        { q: '1 - 0.45 = ?', a: '0.55' }, { q: '5 - 2.73 = ?', a: '2.27' }, { q: '10 - 6.48 = ?', a: '3.52' },
+      ]},
+    }
+  },
+  multiplication: {
+    label: 'Multiplication',
+    icon: '✖️',
+    subcategories: {
+      tables2to5: { label: '2× to 5× tables', questions: [
+        { q: '2 × 6 = ?', a: '12' }, { q: '3 × 7 = ?', a: '21' }, { q: '4 × 8 = ?', a: '32' }, { q: '5 × 9 = ?', a: '45' },
+        { q: '2 × 9 = ?', a: '18' }, { q: '3 × 8 = ?', a: '24' }, { q: '4 × 6 = ?', a: '24' }, { q: '5 × 7 = ?', a: '35' },
+        { q: '2 × 12 = ?', a: '24' }, { q: '3 × 11 = ?', a: '33' }, { q: '4 × 12 = ?', a: '48' }, { q: '5 × 12 = ?', a: '60' },
+        { q: '2 × 8 = ?', a: '16' }, { q: '3 × 9 = ?', a: '27' }, { q: '4 × 11 = ?', a: '44' },
+      ]},
+      tables6to9: { label: '6× to 9× tables', questions: [
+        { q: '6 × 7 = ?', a: '42' }, { q: '7 × 8 = ?', a: '56' }, { q: '8 × 9 = ?', a: '72' }, { q: '9 × 6 = ?', a: '54' },
+        { q: '6 × 9 = ?', a: '54' }, { q: '7 × 6 = ?', a: '42' }, { q: '8 × 7 = ?', a: '56' }, { q: '9 × 8 = ?', a: '72' },
+        { q: '6 × 8 = ?', a: '48' }, { q: '7 × 9 = ?', a: '63' }, { q: '8 × 6 = ?', a: '48' }, { q: '9 × 7 = ?', a: '63' },
+        { q: '6 × 12 = ?', a: '72' }, { q: '7 × 12 = ?', a: '84' }, { q: '8 × 12 = ?', a: '96' },
+      ]},
+      tables1012: { label: '10× to 12× tables', questions: [
+        { q: '10 × 7 = ?', a: '70' }, { q: '11 × 6 = ?', a: '66' }, { q: '12 × 8 = ?', a: '96' },
+        { q: '10 × 9 = ?', a: '90' }, { q: '11 × 8 = ?', a: '88' }, { q: '12 × 7 = ?', a: '84' },
+        { q: '10 × 12 = ?', a: '120' }, { q: '11 × 11 = ?', a: '121' }, { q: '12 × 12 = ?', a: '144' },
+        { q: '10 × 6 = ?', a: '60' }, { q: '11 × 9 = ?', a: '99' }, { q: '12 × 9 = ?', a: '108' },
+        { q: '11 × 12 = ?', a: '132' }, { q: '10 × 11 = ?', a: '110' }, { q: '12 × 11 = ?', a: '132' },
+      ]},
+      yr56: { label: 'Year 5-6 (multi-digit)', questions: [
+        { q: '23 × 4 = ?', a: '92' }, { q: '45 × 3 = ?', a: '135' }, { q: '67 × 5 = ?', a: '335' },
+        { q: '34 × 6 = ?', a: '204' }, { q: '56 × 7 = ?', a: '392' }, { q: '78 × 4 = ?', a: '312' },
+        { q: '25 × 12 = ?', a: '300' }, { q: '36 × 11 = ?', a: '396' }, { q: '48 × 10 = ?', a: '480' },
+        { q: '23 × 14 = ?', a: '322' }, { q: '15 × 15 = ?', a: '225' }, { q: '24 × 25 = ?', a: '600' },
+        { q: '32 × 20 = ?', a: '640' }, { q: '45 × 20 = ?', a: '900' }, { q: '50 × 16 = ?', a: '800' },
+      ]},
+    }
+  },
+  division: {
+    label: 'Division',
+    icon: '➗',
+    subcategories: {
+      yr3: { label: 'Year 3 (basic)', questions: [
+        { q: '12 ÷ 3 = ?', a: '4' }, { q: '20 ÷ 4 = ?', a: '5' }, { q: '15 ÷ 5 = ?', a: '3' },
+        { q: '18 ÷ 2 = ?', a: '9' }, { q: '24 ÷ 6 = ?', a: '4' }, { q: '21 ÷ 7 = ?', a: '3' },
+        { q: '32 ÷ 8 = ?', a: '4' }, { q: '27 ÷ 9 = ?', a: '3' }, { q: '30 ÷ 5 = ?', a: '6' },
+        { q: '16 ÷ 4 = ?', a: '4' }, { q: '36 ÷ 6 = ?', a: '6' }, { q: '42 ÷ 7 = ?', a: '6' },
+        { q: '48 ÷ 8 = ?', a: '6' }, { q: '45 ÷ 9 = ?', a: '5' }, { q: '28 ÷ 4 = ?', a: '7' },
+      ]},
+      yr4: { label: 'Year 4', questions: [
+        { q: '72 ÷ 8 = ?', a: '9' }, { q: '63 ÷ 7 = ?', a: '9' }, { q: '54 ÷ 6 = ?', a: '9' },
+        { q: '96 ÷ 8 = ?', a: '12' }, { q: '84 ÷ 7 = ?', a: '12' }, { q: '132 ÷ 11 = ?', a: '12' },
+        { q: '144 ÷ 12 = ?', a: '12' }, { q: '110 ÷ 10 = ?', a: '11' }, { q: '120 ÷ 10 = ?', a: '12' },
+        { q: '81 ÷ 9 = ?', a: '9' }, { q: '64 ÷ 8 = ?', a: '8' }, { q: '49 ÷ 7 = ?', a: '7' },
+        { q: '100 ÷ 4 = ?', a: '25' }, { q: '200 ÷ 5 = ?', a: '40' }, { q: '150 ÷ 6 = ?', a: '25' },
+      ]},
+      yr56: { label: 'Year 5-6', questions: [
+        { q: '256 ÷ 8 = ?', a: '32' }, { q: '315 ÷ 7 = ?', a: '45' }, { q: '432 ÷ 9 = ?', a: '48' },
+        { q: '480 ÷ 12 = ?', a: '40' }, { q: '660 ÷ 11 = ?', a: '60' }, { q: '756 ÷ 9 = ?', a: '84' },
+        { q: '1000 ÷ 8 = ?', a: '125' }, { q: '1200 ÷ 6 = ?', a: '200' }, { q: '2400 ÷ 8 = ?', a: '300' },
+        { q: '3600 ÷ 9 = ?', a: '400' }, { q: '4500 ÷ 5 = ?', a: '900' }, { q: '7200 ÷ 12 = ?', a: '600' },
+        { q: '0.8 ÷ 4 = ?', a: '0.2' }, { q: '1.2 ÷ 6 = ?', a: '0.2' }, { q: '2.4 ÷ 8 = ?', a: '0.3' },
+      ]},
+    }
+  },
+  fractions: {
+    label: 'Fractions',
+    icon: '½',
+    subcategories: {
+      concept: { label: 'Understanding fractions', questions: [
+        { q: 'What fraction is shaded if 1 of 4 equal parts is coloured?', a: '1/4' },
+        { q: 'What fraction is shaded if 3 of 8 equal parts is coloured?', a: '3/8' },
+        { q: 'Which is larger: 1/2 or 1/4?', a: '1/2' },
+        { q: 'Which is larger: 3/4 or 2/3?', a: '3/4' },
+        { q: 'What is 1/2 of 20?', a: '10' }, { q: 'What is 1/4 of 24?', a: '6' },
+        { q: 'What is 3/4 of 20?', a: '15' }, { q: 'What is 2/3 of 18?', a: '12' },
+        { q: 'What is 1/5 of 35?', a: '7' }, { q: 'What is 3/5 of 25?', a: '15' },
+        { q: 'Simplify 2/4', a: '1/2' }, { q: 'Simplify 4/8', a: '1/2' },
+        { q: 'Simplify 6/9', a: '2/3' }, { q: 'Simplify 4/6', a: '2/3' },
+        { q: 'What is an equivalent fraction to 1/2?', a: '2/4' },
+      ]},
+      operations: { label: 'Fraction operations', questions: [
+        { q: '1/4 + 1/4 = ?', a: '1/2' }, { q: '1/3 + 1/3 = ?', a: '2/3' },
+        { q: '2/5 + 1/5 = ?', a: '3/5' }, { q: '3/8 + 1/8 = ?', a: '1/2' },
+        { q: '5/6 - 1/6 = ?', a: '2/3' }, { q: '3/4 - 1/4 = ?', a: '1/2' },
+        { q: '7/8 - 3/8 = ?', a: '1/2' }, { q: '4/5 - 1/5 = ?', a: '3/5' },
+        { q: '1/2 + 1/4 = ?', a: '3/4' }, { q: '1/2 + 1/6 = ?', a: '2/3' },
+        { q: '3/4 - 1/2 = ?', a: '1/4' }, { q: '5/6 - 1/2 = ?', a: '1/3' },
+        { q: '1/2 × 4 = ?', a: '2' }, { q: '1/4 × 8 = ?', a: '2' }, { q: '2/3 × 9 = ?', a: '6' },
+      ]},
+    }
+  },
+  decimals: {
+    label: 'Decimals',
+    icon: '0.5',
+    subcategories: {
+      concept: { label: 'Understanding decimals', questions: [
+        { q: 'Write 0.5 as a fraction', a: '1/2' }, { q: 'Write 0.25 as a fraction', a: '1/4' },
+        { q: 'Write 0.75 as a fraction', a: '3/4' }, { q: 'Write 1/2 as a decimal', a: '0.5' },
+        { q: 'Write 1/4 as a decimal', a: '0.25' }, { q: 'Write 3/4 as a decimal', a: '0.75' },
+        { q: 'Write 1/5 as a decimal', a: '0.2' }, { q: 'Write 2/5 as a decimal', a: '0.4' },
+        { q: 'Which is larger: 0.6 or 0.59?', a: '0.6' }, { q: 'Which is larger: 0.45 or 0.5?', a: '0.5' },
+        { q: 'Round 3.47 to 1 decimal place', a: '3.5' }, { q: 'Round 7.83 to 1 decimal place', a: '7.8' },
+        { q: 'Round 5.65 to 1 decimal place', a: '5.7' }, { q: 'What is 0.1 + 0.2?', a: '0.3' },
+        { q: 'What is 1.5 + 2.3?', a: '3.8' },
+      ]},
+      operations: { label: 'Decimal operations', questions: [
+        { q: '3.4 + 2.5 = ?', a: '5.9' }, { q: '6.7 + 1.8 = ?', a: '8.5' }, { q: '4.5 + 3.7 = ?', a: '8.2' },
+        { q: '9.8 - 4.3 = ?', a: '5.5' }, { q: '7.6 - 2.8 = ?', a: '4.8' }, { q: '5.4 - 1.9 = ?', a: '3.5' },
+        { q: '0.6 × 5 = ?', a: '3' }, { q: '1.2 × 4 = ?', a: '4.8' }, { q: '2.5 × 3 = ?', a: '7.5' },
+        { q: '3.6 ÷ 4 = ?', a: '0.9' }, { q: '4.8 ÷ 6 = ?', a: '0.8' }, { q: '7.2 ÷ 8 = ?', a: '0.9' },
+        { q: '10% of 50 = ?', a: '5' }, { q: '25% of 80 = ?', a: '20' }, { q: '50% of 36 = ?', a: '18' },
+      ]},
+    }
+  },
+  percentage: {
+    label: 'Percentages',
+    icon: '%',
+    subcategories: {
+      basic: { label: 'Basic percentages', questions: [
+        { q: '10% of 60 = ?', a: '6' }, { q: '10% of 90 = ?', a: '9' }, { q: '10% of 150 = ?', a: '15' },
+        { q: '50% of 80 = ?', a: '40' }, { q: '50% of 120 = ?', a: '60' }, { q: '50% of 250 = ?', a: '125' },
+        { q: '25% of 40 = ?', a: '10' }, { q: '25% of 80 = ?', a: '20' }, { q: '25% of 200 = ?', a: '50' },
+        { q: '75% of 80 = ?', a: '60' }, { q: '75% of 40 = ?', a: '30' }, { q: '75% of 200 = ?', a: '150' },
+        { q: '20% of 60 = ?', a: '12' }, { q: '20% of 100 = ?', a: '20' }, { q: '20% of 150 = ?', a: '30' },
+      ]},
+      applied: { label: 'Applied percentages', questions: [
+        { q: 'A $40 shirt is 25% off. How much do you save?', a: '$10' },
+        { q: 'A $60 toy is 50% off. What is the sale price?', a: '$30' },
+        { q: 'A $80 jacket is 20% off. What do you pay?', a: '$64' },
+        { q: '15 out of 20 students passed. What percentage is that?', a: '75%' },
+        { q: '8 out of 10 questions correct. What percentage?', a: '80%' },
+        { q: '3 out of 4 marbles are blue. What percentage?', a: '75%' },
+        { q: 'A price rises from $50 to $60. What is the increase?', a: '20%' },
+        { q: 'Score improved from 40 to 50. What is the % increase?', a: '25%' },
+        { q: 'What is 15% of 200?', a: '30' }, { q: 'What is 35% of 100?', a: '35' },
+        { q: 'What is 45% of 200?', a: '90' }, { q: 'What is 5% of 80?', a: '4' },
+        { q: 'What is 30% of 90?', a: '27' }, { q: 'What is 60% of 50?', a: '30' },
+        { q: 'What is 90% of 200?', a: '180' },
+      ]},
+    }
+  },
+  length: {
+    label: 'Length & Distance',
+    icon: '📏',
+    subcategories: {
+      conversion: { label: 'Unit conversion', questions: [
+        { q: '1 metre = ? centimetres', a: '100' }, { q: '1 kilometre = ? metres', a: '1000' },
+        { q: '1 centimetre = ? millimetres', a: '10' }, { q: '2 metres = ? centimetres', a: '200' },
+        { q: '5 metres = ? centimetres', a: '500' }, { q: '3 kilometres = ? metres', a: '3000' },
+        { q: '500 centimetres = ? metres', a: '5' }, { q: '2000 metres = ? kilometres', a: '2' },
+        { q: '30 millimetres = ? centimetres', a: '3' }, { q: '150 centimetres = ? metres', a: '1.5' },
+        { q: '2.5 kilometres = ? metres', a: '2500' }, { q: '3.5 metres = ? centimetres', a: '350' },
+        { q: '750 metres = ? kilometres', a: '0.75' }, { q: '45 mm = ? cm', a: '4.5' },
+        { q: '1.2 m = ? cm', a: '120' },
+      ]},
+      problems: { label: 'Length problems', questions: [
+        { q: 'A rope is 5 m long. You cut off 180 cm. How much is left in cm?', a: '320 cm' },
+        { q: 'A path is 2.5 km long. How many metres is that?', a: '2500 m' },
+        { q: 'A book is 24 cm tall. How many mm is that?', a: '240 mm' },
+        { q: 'Tom walks 1.2 km to school. How many metres?', a: '1200 m' },
+        { q: 'A worm is 85 mm long. How many cm is that?', a: '8.5 cm' },
+        { q: 'Two pieces of ribbon: 45 cm and 38 cm. Total length?', a: '83 cm' },
+        { q: 'A fence is 12 m long. Each panel is 1.5 m. How many panels?', a: '8' },
+        { q: 'A room is 4 m wide. How wide in centimetres?', a: '400 cm' },
+        { q: 'Distance from A to B is 3.7 km, B to C is 2.4 km. Total?', a: '6.1 km' },
+        { q: 'A pencil is 17.5 cm. How many mm?', a: '175 mm' },
+      ]},
+    }
+  },
+  area: {
+    label: 'Area',
+    icon: '⬛',
+    subcategories: {
+      basic: { label: 'Basic area', questions: [
+        { q: 'Area of rectangle: 5 cm × 3 cm = ?', a: '15 cm²' },
+        { q: 'Area of rectangle: 8 cm × 4 cm = ?', a: '32 cm²' },
+        { q: 'Area of rectangle: 7 cm × 6 cm = ?', a: '42 cm²' },
+        { q: 'Area of square: side 5 cm = ?', a: '25 cm²' },
+        { q: 'Area of square: side 9 cm = ?', a: '81 cm²' },
+        { q: 'Area of square: side 12 cm = ?', a: '144 cm²' },
+        { q: 'Area of rectangle: 10 m × 6 m = ?', a: '60 m²' },
+        { q: 'Area of rectangle: 15 m × 4 m = ?', a: '60 m²' },
+        { q: 'Area of rectangle: 11 cm × 8 cm = ?', a: '88 cm²' },
+        { q: 'Area of rectangle: 20 m × 5 m = ?', a: '100 m²' },
+      ]},
+      applied: { label: 'Area problems', questions: [
+        { q: 'A room is 6 m × 4 m. What is its area?', a: '24 m²' },
+        { q: 'A garden is 8 m × 5 m. What is its area?', a: '40 m²' },
+        { q: 'A tile is 30 cm × 20 cm. What is its area?', a: '600 cm²' },
+        { q: 'A field is 100 m × 50 m. What is its area?', a: '5000 m²' },
+        { q: 'How many 1 cm² tiles needed to cover 24 cm × 12 cm?', a: '288' },
+        { q: 'A photo is 15 cm × 10 cm. What is the area?', a: '150 cm²' },
+        { q: 'A square has area 64 cm². What is the side length?', a: '8 cm' },
+        { q: 'A square has area 100 m². What is the side length?', a: '10 m' },
+        { q: 'Rectangle: area 48 cm², length 8 cm. What is the width?', a: '6 cm' },
+        { q: 'Rectangle: area 72 m², length 9 m. What is the width?', a: '8 m' },
+      ]},
+    }
+  },
+  perimeter: {
+    label: 'Perimeter',
+    icon: '🔲',
+    subcategories: {
+      basic: { label: 'Basic perimeter', questions: [
+        { q: 'Perimeter of rectangle: 5 cm × 3 cm = ?', a: '16 cm' },
+        { q: 'Perimeter of rectangle: 8 cm × 4 cm = ?', a: '24 cm' },
+        { q: 'Perimeter of square: side 6 cm = ?', a: '24 cm' },
+        { q: 'Perimeter of square: side 9 cm = ?', a: '36 cm' },
+        { q: 'Perimeter of rectangle: 10 m × 3 m = ?', a: '26 m' },
+        { q: 'Perimeter of rectangle: 7 cm × 5 cm = ?', a: '24 cm' },
+        { q: 'Perimeter of square: side 11 cm = ?', a: '44 cm' },
+        { q: 'Perimeter of rectangle: 12 m × 4 m = ?', a: '32 m' },
+        { q: 'Perimeter of square: side 8 m = ?', a: '32 m' },
+        { q: 'Perimeter of rectangle: 20 cm × 6 cm = ?', a: '52 cm' },
+      ]},
+      applied: { label: 'Perimeter problems', questions: [
+        { q: 'A garden is 8 m × 5 m. What is the perimeter?', a: '26 m' },
+        { q: 'A room is 6 m × 4 m. What is the perimeter?', a: '20 m' },
+        { q: 'A square paddock has perimeter 40 m. What is the side?', a: '10 m' },
+        { q: 'A rectangle has perimeter 30 cm and length 10 cm. Width?', a: '5 cm' },
+        { q: 'A square has perimeter 36 cm. What is the area?', a: '81 cm²' },
+        { q: 'Fencing around 12 m × 8 m garden. How much fencing?', a: '40 m' },
+        { q: 'Triangle sides: 5 cm, 7 cm, 9 cm. Perimeter?', a: '21 cm' },
+        { q: 'Triangle sides: 8 m, 6 m, 10 m. Perimeter?', a: '24 m' },
+        { q: 'A rectangle has perimeter 24 cm. If length = 8 cm, width = ?', a: '4 cm' },
+        { q: 'A regular hexagon has side 5 cm. Perimeter?', a: '30 cm' },
+      ]},
+    }
+  },
+  time: {
+    label: 'Time',
+    icon: '🕐',
+    subcategories: {
+      reading: { label: 'Reading time', questions: [
+        { q: 'How many minutes in 1 hour?', a: '60' },
+        { q: 'How many seconds in 1 minute?', a: '60' },
+        { q: 'How many hours in 1 day?', a: '24' },
+        { q: 'How many days in a week?', a: '7' },
+        { q: 'How many months in a year?', a: '12' },
+        { q: 'How many minutes in 2 hours?', a: '120' },
+        { q: 'How many hours in 3 days?', a: '72' },
+        { q: 'How many seconds in 3 minutes?', a: '180' },
+        { q: 'How many minutes in half an hour?', a: '30' },
+        { q: 'How many minutes in a quarter of an hour?', a: '15' },
+        { q: '90 minutes = ? hours and ? minutes', a: '1 hour 30 minutes' },
+        { q: '150 minutes = ? hours and ? minutes', a: '2 hours 30 minutes' },
+        { q: '1 hour 45 minutes = ? minutes', a: '105' },
+        { q: '2 hours 20 minutes = ? minutes', a: '140' },
+        { q: '3 hours 15 minutes = ? minutes', a: '195' },
+      ]},
+      problems: { label: 'Time problems', questions: [
+        { q: 'School starts at 9:00 am and finishes at 3:15 pm. How long is the school day?', a: '6 hours 15 minutes' },
+        { q: 'A movie starts at 2:30 pm and runs for 1 hour 45 minutes. When does it finish?', a: '4:15 pm' },
+        { q: 'Tom left home at 8:45 am and arrived at 9:10 am. How long did the trip take?', a: '25 minutes' },
+        { q: 'If it is 11:40 am, what time will it be in 35 minutes?', a: '12:15 pm' },
+        { q: 'A train journey takes 2 hours 40 minutes. It leaves at 7:15 am. When does it arrive?', a: '9:55 am' },
+        { q: 'Cooking takes 1 hour 20 minutes. Started at 5:30 pm. When is it ready?', a: '6:50 pm' },
+        { q: 'Recess is from 11:00 am to 11:20 am. How long is recess?', a: '20 minutes' },
+        { q: 'How many minutes from 10:25 am to 11:10 am?', a: '45 minutes' },
+        { q: 'How many days from January 5 to January 20?', a: '15 days' },
+        { q: 'A TV show goes from 7:30 pm to 8:00 pm. How long?', a: '30 minutes' },
+      ]},
+    }
+  },
+  shapes2d: {
+    label: '2D Shapes',
+    icon: '🔺',
+    subcategories: {
+      properties: { label: 'Shape properties', questions: [
+        { q: 'How many sides does a triangle have?', a: '3' },
+        { q: 'How many sides does a pentagon have?', a: '5' },
+        { q: 'How many sides does a hexagon have?', a: '6' },
+        { q: 'How many sides does an octagon have?', a: '8' },
+        { q: 'How many right angles does a rectangle have?', a: '4' },
+        { q: 'What do we call a triangle with all sides equal?', a: 'Equilateral triangle' },
+        { q: 'What do we call a triangle with one right angle?', a: 'Right-angled triangle' },
+        { q: 'What do we call a quadrilateral with exactly one pair of parallel sides?', a: 'Trapezium' },
+        { q: 'How many lines of symmetry does a square have?', a: '4' },
+        { q: 'How many lines of symmetry does an equilateral triangle have?', a: '3' },
+        { q: 'What is the sum of angles in a triangle?', a: '180°' },
+        { q: 'What is the sum of angles in a quadrilateral?', a: '360°' },
+        { q: 'A regular polygon has all sides equal and all angles equal — true or false?', a: 'True' },
+        { q: 'What shape has 4 equal sides but no right angles?', a: 'Rhombus' },
+        { q: 'How many pairs of parallel sides does a parallelogram have?', a: '2' },
+      ]},
+    }
+  },
+  shapes3d: {
+    label: '3D Objects',
+    icon: '🎲',
+    subcategories: {
+      properties: { label: '3D properties', questions: [
+        { q: 'How many faces does a cube have?', a: '6' },
+        { q: 'How many edges does a cube have?', a: '12' },
+        { q: 'How many vertices does a cube have?', a: '8' },
+        { q: 'What shape are the faces of a cube?', a: 'Squares' },
+        { q: 'How many faces does a triangular prism have?', a: '5' },
+        { q: 'How many faces does a square pyramid have?', a: '5' },
+        { q: 'What is the base shape of a cone?', a: 'Circle' },
+        { q: 'How many faces does a cylinder have?', a: '3' },
+        { q: 'How many curved surfaces does a sphere have?', a: '1' },
+        { q: 'A rectangular prism has how many faces?', a: '6' },
+        { q: 'What 3D shape has 5 vertices and 5 faces?', a: 'Square pyramid' },
+        { q: 'How many edges does a triangular prism have?', a: '9' },
+        { q: 'Faces + Vertices - Edges = ? (Euler\'s formula)', a: '2' },
+        { q: 'What is the net of a cube made of?', a: '6 squares' },
+        { q: 'A prism has the same cross-section all along its length — true or false?', a: 'True' },
+      ]},
+    }
+  },
+  chance: {
+    label: 'Chance & Probability',
+    icon: '🎲',
+    subcategories: {
+      language: { label: 'Chance language', questions: [
+        { q: 'What word means something will definitely happen?', a: 'Certain' },
+        { q: 'What word means something will definitely NOT happen?', a: 'Impossible' },
+        { q: 'Tossing a coin — what is the chance of getting heads?', a: '1/2 or 50%' },
+        { q: 'Rolling a die — what is the chance of getting a 6?', a: '1/6' },
+        { q: 'Rolling a die — what is the chance of getting an even number?', a: '1/2 or 3/6' },
+        { q: 'A bag has 3 red and 2 blue marbles. Chance of red?', a: '3/5' },
+        { q: 'A bag has 4 green and 1 yellow marble. Chance of yellow?', a: '1/5' },
+        { q: 'If probability is 0, the event is?', a: 'Impossible' },
+        { q: 'If probability is 1, the event is?', a: 'Certain' },
+        { q: 'Probability is always between which two numbers?', a: '0 and 1' },
+        { q: 'Rolling a die — probability of getting a number less than 3?', a: '2/6 or 1/3' },
+        { q: 'Tossing a coin twice — how many possible outcomes?', a: '4' },
+        { q: 'A bag has 5 red and 5 blue. Are you more likely to pick red or blue?', a: 'Same chance' },
+        { q: 'You roll a die. P(7) = ?', a: '0' },
+        { q: 'You roll a die. P(1,2,3,4,5,6) = ?', a: '1' },
+      ]},
+    }
+  },
+  data: {
+    label: 'Data & Graphs',
+    icon: '📊',
+    subcategories: {
+      graphs: { label: 'Reading graphs', questions: [
+        { q: 'What type of graph uses bars to show data?', a: 'Bar graph or column graph' },
+        { q: 'What type of graph uses a circle divided into sectors?', a: 'Pie chart' },
+        { q: 'What type of graph shows data over time with connected points?', a: 'Line graph' },
+        { q: 'What is the mode in a data set?', a: 'The most common value' },
+        { q: 'What is the median in a data set?', a: 'The middle value' },
+        { q: 'What is the range in a data set?', a: 'Highest minus lowest value' },
+        { q: 'Find the mean of: 4, 6, 8, 10, 12', a: '8' },
+        { q: 'Find the range of: 3, 7, 12, 5, 9', a: '9' },
+        { q: 'Find the median of: 2, 5, 7, 8, 11', a: '7' },
+        { q: 'Find the mode of: 3, 5, 7, 5, 2, 8, 5', a: '5' },
+        { q: 'Find the mean of: 10, 20, 30, 40', a: '25' },
+        { q: 'Find the range of: 15, 27, 8, 42, 19', a: '34' },
+        { q: 'A tally mark IIII crossed = how many?', a: '5' },
+        { q: 'What is a census?', a: 'Collecting data from everyone in a group' },
+        { q: 'What is a sample in statistics?', a: 'A part of a larger group' },
+      ]},
+    }
+  },
+  money: {
+    label: 'Money',
+    icon: '💰',
+    subcategories: {
+      basic: { label: 'Money calculations', questions: [
+        { q: '$4.50 + $3.25 = ?', a: '$7.75' }, { q: '$8.75 - $3.50 = ?', a: '$5.25' },
+        { q: '$12.00 - $4.65 = ?', a: '$7.35' }, { q: '$6.30 + $4.80 = ?', a: '$11.10' },
+        { q: '$20.00 - $13.45 = ?', a: '$6.55' }, { q: '$5.99 × 3 = ?', a: '$17.97' },
+        { q: '$8.40 ÷ 4 = ?', a: '$2.10' }, { q: '$15.60 ÷ 3 = ?', a: '$5.20' },
+        { q: 'You have $10. You spend $3.75. Change?', a: '$6.25' },
+        { q: '3 items at $2.50 each = ?', a: '$7.50' },
+        { q: 'You pay $20 for items costing $16.35. Change?', a: '$3.65' },
+        { q: '4 pens at $1.25 each = ?', a: '$5.00' },
+        { q: 'A book costs $12.99. Rounded to nearest dollar?', a: '$13' },
+        { q: '$50 shared equally among 4 people = ?', a: '$12.50 each' },
+        { q: 'Sale: 50% off $44. Sale price?', a: '$22' },
+      ]},
+    }
+  },
+  worded: {
+    label: 'Word Problems',
+    icon: '📝',
+    subcategories: {
+      mixed: { label: 'Mixed word problems', questions: [
+        { q: 'Tom has 36 stickers. He gives 1/4 to his friend. How many does he keep?', a: '27' },
+        { q: 'A train has 8 carriages with 45 seats each. Total seats?', a: '360' },
+        { q: 'A baker makes 240 rolls and packs them in bags of 8. How many bags?', a: '30' },
+        { q: '5 friends share a pizza cut into 20 slices equally. How many slices each?', a: '4' },
+        { q: 'A car travels at 80 km/h for 3 hours. Total distance?', a: '240 km' },
+        { q: 'A class of 32 students: 3/8 are wearing hats. How many?', a: '12' },
+        { q: 'Sarah reads 25 pages a day. How many pages in 2 weeks?', a: '350' },
+        { q: 'A rectangle is 12 cm long and 8 cm wide. Perimeter?', a: '40 cm' },
+        { q: 'Tom earns $12 per hour and works 7 hours. Total?', a: '$84' },
+        { q: 'A bag holds 5 kg. How many bags for 45 kg?', a: '9' },
+        { q: 'Temperature at 7 am: 8°C. It rises 15°C by noon. Temperature at noon?', a: '23°C' },
+        { q: 'A swimming pool is 25 m long. How many lengths for 1 km?', a: '40' },
+        { q: 'Apples cost $3.50 per kg. Cost of 4 kg?', a: '$14' },
+        { q: 'A fence needs 48 posts, 2 m apart. How long is the fence?', a: '94 m' },
+        { q: 'A school has 480 students in 16 equal classes. How many per class?', a: '30' },
+      ]},
+    }
+  },
+};
+
+// Helper to get all categories
+function getMathsCategories() {
+  return Object.entries(MATHS_BANK).map(([id, cat]) => ({
+    id, label: cat.label, icon: cat.icon,
+    subcategories: Object.entries(cat.subcategories).map(([sid, sub]) => ({
+      id: sid, label: sub.label, count: sub.questions.length
+    }))
+  }));
+}
+
+// Get questions for a category/subcategory
+function getMathsQuestions(catId, subId, count) {
+  const cat = MATHS_BANK[catId];
+  if (!cat) return [];
+  const sub = cat.subcategories[subId] || Object.values(cat.subcategories)[0];
+  if (!sub) return [];
+  const shuffled = [...sub.questions].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count || 10);
+}
+
+
+// Initialise the quiz bank UI
+function qbInit() {
+  const catSel = document.getElementById('qb-cat');
+  if (!catSel) return;
+  catSel.innerHTML = '';
+  Object.entries(MATHS_BANK).forEach(([id, cat]) => {
+    const o = document.createElement('option');
+    o.value = id; o.textContent = cat.icon + ' ' + cat.label;
+    catSel.appendChild(o);
+  });
+  qbLoadSubs();
+}
+
+function qbLoadSubs() {
+  const catId = document.getElementById('qb-cat').value;
+  const subSel = document.getElementById('qb-sub');
+  subSel.innerHTML = '';
+  const cat = MATHS_BANK[catId];
+  if (!cat) return;
+  Object.entries(cat.subcategories).forEach(([id, sub]) => {
+    const o = document.createElement('option');
+    o.value = id; o.textContent = sub.label + ' (' + sub.questions.length + ' q)';
+    subSel.appendChild(o);
+  });
+}
+
+function qbGetQuestions() {
+  const catId = document.getElementById('qb-cat').value;
+  const subId = document.getElementById('qb-sub').value;
+  const count = parseInt(document.getElementById('qb-count').value) || 10;
+  return getMathsQuestions(catId, subId, count);
+}
+
+function qbFormatAsContent(qs) {
+  // Format as Q|answer|wrong1|wrong2|wrong3 per line for the task system
+  return qs.map(q => {
+    const wrongs = generateWrongAnswers(q.a, q.q);
+    return q.q + '|' + q.a + '|' + wrongs.join('|');
+  }).join('\n');
+}
+
+function generateWrongAnswers(correct, question) {
+  // Generate plausible wrong answers based on the correct answer
+  const num = parseFloat(correct.replace(/[^0-9.-]/g, ''));
+  const suffix = correct.replace(/[0-9.-]/g, '').trim();
+  const wrongs = new Set();
+  if (!isNaN(num)) {
+    const variants = [
+      Math.round((num + Math.ceil(num * 0.1 + 1)) * 100) / 100,
+      Math.round((num - Math.ceil(num * 0.1 + 1)) * 100) / 100,
+      Math.round((num + Math.ceil(num * 0.2 + 2)) * 100) / 100,
+      Math.round((num * 1.1)) / 1,
+      Math.round((num * 0.9)) / 1,
+    ];
+    variants.forEach(v => {
+      if (v !== num && v > 0) wrongs.add((suffix ? v + ' ' + suffix : String(v)));
+    });
+  } else {
+    // Non-numeric: provide generic wrong answers based on category
+    const genericWrongs = ['I don\'t know', 'None of these', 'Not possible'];
+    genericWrongs.forEach(w => wrongs.add(w));
+  }
+  return [...wrongs].filter(w => String(w) !== String(correct)).slice(0, 3);
+}
+
+function qbPreview() {
+  const qs = qbGetQuestions();
+  const prev = document.getElementById('qb-preview');
+  if (!qs.length) { prev.style.display='none'; return; }
+  prev.textContent = qs.map((q,i) => (i+1)+'. '+q.q+'\n   Answer: '+q.a).join('\n\n');
+  prev.style.display = 'block';
+}
+
+function qbRefreshTaskList() {
+  const sel = document.getElementById('qb-task');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— insert into task —</option>';
+  const dayTasks = tasks.filter(t => t.day_index === day);
+  dayTasks.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id;
+    o.textContent = t.name + ' (' + t.subject + ')';
+    sel.appendChild(o);
+  });
+}
+
+async function qbInsert() {
+  const taskId = parseInt(document.getElementById('qb-task').value);
+  if (!taskId) { toast('Select a task to insert into'); return; }
+  const qs = qbGetQuestions();
+  if (!qs.length) { toast('No questions found'); return; }
+  const formatted = qbFormatAsContent(qs);
+  // Update the task in DB
+  const { error } = await db.from('tasks').update({
+    activity_content: formatted,
+    updated_at: new Date()
+  }).eq('id', taskId);
+  if (error) { toast('Error: ' + error.message); return; }
+  // Update local
+  const t = tasks.find(x => x.id === taskId);
+  if (t) t.activity_content = formatted;
+  rdTasks();
+  toast('✓ ' + qs.length + ' questions inserted into task!');
+  // Also show in the task's content field if visible
+  const tc = document.getElementById('tc' + taskId);
+  if (tc) tc.value = formatted;
+}
+
+// Call qbInit after loadAll, and refresh task list when tasks load
+const _origLoadTasks = ldTasks;
+ldTasks = async function() {
+  await _origLoadTasks();
+  qbRefreshTaskList();
+  qbInit();
+};
 
 </script>
 </body>
