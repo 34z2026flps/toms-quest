@@ -413,8 +413,9 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
       </div>
       <div style="flex:1;display:flex;flex-direction:column;gap:5px">
         <div style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Customise</div>
-        <button class="av-cat-btn active" id="avcat-skin" onclick="setAvCat('skin')">🎨 Skin &amp; Hair</button>
-        <button class="av-cat-btn" id="avcat-top" onclick="setAvCat('top'); // and bottom">👕 Tops &amp; Capes</button>
+        <button class="av-cat-btn active" id="avcat-skin" onclick="setAvCat('skin')">🎨 Skin</button>
+      <button class="av-cat-btn" id="avcat-hair" onclick="setAvCat('hair')">💇 Hair</button>
+        <button class="av-cat-btn" id="avcat-top" onclick="setAvCat('top')">👕 Tops</button>
       <button class="av-cat-btn" onclick="setAvCat('bottom')" id="avcat-bottom">👖 Bottoms</button>
         <button class="av-cat-btn" id="avcat-hat" onclick="setAvCat('hat')">🎩 Hats</button>
         <button class="av-cat-btn" id="avcat-accessory" onclick="setAvCat('accessory')">✨ Accessories</button>
@@ -1102,10 +1103,10 @@ const AV_CATALOGUE = [
   {id:'skin_medium',  cat:'skin', label:'Medium skin',  cost:0,   milestoneXP:0,   skin:'#D4956B',hair:'#2c1810',eye:'#2c1810'},
   {id:'skin_dark',    cat:'skin', label:'Dark skin',    cost:0,   milestoneXP:0,   skin:'#8D5524',hair:'#1a0a00',eye:'#1a0a00'},
   {id:'skin_tan',     cat:'skin', label:'Tan skin',     cost:0,   milestoneXP:0,   skin:'#C68642',hair:'#4a2c0a',eye:'#2c1810'},
-  {id:'hair_blonde',  cat:'skin', label:'Blonde hair',  cost:30,  milestoneXP:0,   skin:null,     hair:'#f5d06e',eye:null},
-  {id:'hair_red',     cat:'skin', label:'Red hair',     cost:40,  milestoneXP:0,   skin:null,     hair:'#c0392b',eye:null},
-  {id:'hair_black',   cat:'skin', label:'Black hair',   cost:0,   milestoneXP:0,   skin:null,     hair:'#1a0a00',eye:null},
-  {id:'hair_blue',    cat:'skin', label:'Blue hair',    cost:60,  milestoneXP:0,   skin:null,     hair:'#2563eb',eye:null},
+  {id:'hair_blonde',  cat:'hair', label:'Blonde hair',  cost:30,  milestoneXP:0,   skin:null,     hair:'#f5d06e',eye:null},
+  {id:'hair_red',     cat:'hair', label:'Red hair',     cost:40,  milestoneXP:0,   skin:null,     hair:'#c0392b',eye:null},
+  {id:'hair_black',   cat:'hair', label:'Black hair',   cost:0,   milestoneXP:0,   skin:null,     hair:'#1a0a00',eye:null},
+  {id:'hair_blue',    cat:'hair', label:'Blue hair',    cost:60,  milestoneXP:0,   skin:null,     hair:'#2563eb',eye:null},
   // TOPS (no 'no top' option — Tom always has clothing)
   {id:'top_blue',     cat:'top', label:'Blue shirt',      cost:0,   milestoneXP:0,   topColor:'#3b82f6'},
   {id:'top_red',      cat:'top', label:'Red shirt',       cost:0,   milestoneXP:0,   topColor:'#ef4444'},
@@ -1420,7 +1421,14 @@ function drawAvatar(canvasId, scale){
   if(hatItem&&hatItem.hatEmoji){ctx.font=Math.floor(headR*1.5)+'px serif';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(hatItem.hatEmoji,cx,headCY-headR*0.7);}
   // ACCESSORY
   const accItem=getItem(av.accessory);
-  if(accItem&&accItem.accEmoji){ctx.font=Math.floor(torsoW*0.55)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(accItem.accEmoji,cx+torsoW*0.75,shoulderY+torsoH*0.5);}
+  if(accItem&&accItem.accEmoji){
+    ctx.font=Math.floor(torsoW*0.7)+'px serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    // Draw with shadow for visibility
+    ctx.shadowColor='rgba(0,0,0,0.3)';ctx.shadowBlur=4;
+    ctx.fillText(accItem.accEmoji,cx+torsoW*0.8,shoulderY+torsoH*0.45);
+    ctx.shadowBlur=0;
+  }
 }
 
 function renderMiniAvatar(){
@@ -1485,10 +1493,11 @@ function setAvTab(tab){
 
 function setAvCat(cat){
   state.avCat=cat;
-  ['skin','top','hat','accessory','bg'].forEach(c=>{
-    document.getElementById('avcat-'+c).className='av-cat-btn'+(c===cat?' active':'');
+  ['skin','hair','top','bottom','hat','accessory','bg'].forEach(c=>{
+    const el = document.getElementById('avcat-'+c);
+    if(el) el.className='av-cat-btn'+(c===cat?' active':'');
   });
-  const labels={skin:'Skin & Hair',top:'Tops & Capes',hat:'Hats',accessory:'Accessories',bg:'Backgrounds'};
+  const labels={skin:'Skin Tone',hair:'Hair Colour',top:'Tops',bottom:'Bottoms',hat:'Hats',accessory:'Accessories',bg:'Backgrounds'};
   document.getElementById('av-cat-label').textContent=labels[cat]||cat;
   renderAvItems();
 }
@@ -1542,7 +1551,13 @@ function selectOrBuyItem(item){
   const cat=item.cat;
   if(isOwned(item.id)){
     if(cat==='pet'){setPet(item.id);}
-    else{state.avatar[cat]=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();renderAvItems();}
+    else{
+      // hair items store in av.hair, others in av[cat]
+      if(cat==='hair'){state.avatar.hair=item.id;}
+      else if(cat==='bottom'){state.avatar.bottom=item.id;}
+      else{state.avatar[cat]=item.id;}
+      drawAvatar('avatar-canvas');renderMiniAvatar();renderAvItems();
+    }
     return;
   }
   // not owned — try to buy or check milestone
@@ -1550,7 +1565,7 @@ function selectOrBuyItem(item){
     if(state.xp>=item.milestoneXP){
       state.ownedItems.add(item.id);
       showToast(`${item.label} unlocked! 🎉`);
-      if(cat==='pet')setPet(item.id);else{state.avatar[cat]=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}
+      if(cat==='pet')setPet(item.id);else if(cat==='hair'){state.avatar.hair=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}else if(cat==='bottom'){state.avatar.bottom=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}else{state.avatar[cat]=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}
       renderAvItems();
     } else {
       showToast(`Reach ${item.milestoneXP} XP to unlock this!`);
