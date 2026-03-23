@@ -95,6 +95,20 @@ select.fi{background:#fff}
       </div>
     </div>
 
+
+    <!-- AI Settings -->
+    <div class="card" id="ai-settings-card">
+      <div class="ctitle">🤖 AI Settings</div>
+      <p style="font-size:12px;color:#64748b;margin-bottom:10px">Enter your Anthropic API key to enable AI task generation. Your key is saved only on this device — never sent anywhere except Anthropic's servers.</p>
+      <div class="fr">
+        <div class="fl">API Key</div>
+        <input id="api-key-input" type="password" class="fi" placeholder="sk-ant-…" value="">
+        <button class="btn bp sm" onclick="saveApiKey()">Save</button>
+      </div>
+      <div id="api-key-status" style="font-size:11px;font-weight:700;margin-top:6px;min-height:16px;color:#94a3b8"></div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:6px">Get a free key at <strong>console.anthropic.com</strong> → API Keys → Create Key. Free tier includes $5 credit.</div>
+    </div>
+
     <div class="card">
       <div class="ctitle">🤖 AI Task Generator</div>
       <p style="font-size:12px;color:#64748b;margin-bottom:10px">Describe what you want Tom to do and AI will create the task content.</p>
@@ -332,6 +346,34 @@ function printDay(){
   w.document.write('</body></html>');w.document.close();w.print();
 }
 
+
+// ── SHARED AI HELPER ─────────────────────────────────────
+async function callClaude(systemPrompt, userMessage) {
+  const key = getApiKey();
+  if (!key) throw new Error('No API key — enter your Anthropic API key in the AI Settings card');
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1200,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }],
+    }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(()=>({}));
+    throw new Error((err.error && err.error.message) || 'API error ' + resp.status);
+  }
+  const data = await resp.json();
+  return (data.content?.[0]?.text || '').trim();
+}
+
 async function genAI(){
   const prompt=document.getElementById('aip').value.trim();
   if(!prompt){toast('Enter a description first!');return;}
@@ -339,11 +381,8 @@ async function genAI(){
   const btn=document.getElementById('aibtn'),st=document.getElementById('aist'),prev=document.getElementById('aiprev');
   btn.disabled=true;btn.textContent='⏳ Generating…';st.textContent='Asking AI…';st.style.color='#4f46e5';prev.style.display='none';
   try{
-    const sys='You are a teacher assistant. Create a task for Tom, gifted 10-11 year old. Return ONLY valid JSON (no markdown) with: name, meta (max 8 words), xp (20-50), steps (1-10), activity_content (for MC use Q|answer|opt|opt|opt per line; writing=prompt text; spelling=word|hint per line), min_words.';
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:sys,messages:[{role:'user',content:'Subject: '+subj+'. Request: '+prompt}]})});
-    if(!r.ok)throw new Error('API '+r.status);
-    const d=await r.json();
-    const raw=(d.content?.[0]?.text||'').replace(/```json|```/g,'').trim();
+    const sys='You are a teacher assistant. Create a task for Tom, a gifted 10-11 year old. Return ONLY valid JSON (no markdown, no backticks) with these exact fields: name (short title), meta (max 8 words), xp (number 20-50), steps (number 1-10), activity_content (for Science/History/Geography use Q|answer|opt1|opt2|opt3 per line; for Writing use the prompt text; for Spelling use word|hint per line), min_words (number).';
+    const raw = (await (async()=>{ let r=await callClaude(sys,'Subject: '+subj+'. Request: '+prompt); return r.split('\n').filter(l=>!l.startsWith('```')).join('\n').trim(); })());
     const tk=JSON.parse(raw);
     prev.style.display='block';
     prev.innerHTML='<div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#4f46e5;margin-bottom:8px">Preview — '+subj+' for '+DAYS[di]+'</div><div style="font-size:15px;font-weight:800;margin-bottom:3px">'+esc(tk.name||'')+'</div><div style="font-size:12px;color:#64748b;margin-bottom:8px">'+esc(tk.meta||'')+' · '+(tk.xp||25)+' XP</div><div style="font-size:12px;line-height:1.6;white-space:pre-wrap;background:#fff;border-radius:8px;padding:10px;border:1px solid #e2e8f0;max-height:180px;overflow-y:auto">'+esc(tk.activity_content||'')+'</div><button class="btn bp" onclick="insertAI(this)" data-task="'+encodeURIComponent(JSON.stringify(tk))+'" data-day="'+di+'" data-subj="'+subj+'" style="width:100%;margin-top:10px">✓ Add to '+DAYS[di]+'</button>';
@@ -351,6 +390,7 @@ async function genAI(){
   }catch(e){st.textContent='Error: '+e.message;st.style.color='#dc2626';}
   btn.disabled=false;btn.textContent='✨ Generate with AI';
 }
+
 
 async function insertAI(btn){
   const tk=JSON.parse(decodeURIComponent(btn.dataset.task));
@@ -512,15 +552,9 @@ async function aiAutoFill(taskId) {
   const subj = document.getElementById('ts'+taskId)?.value || (t?t.subject:'General');
   try {
     const sys = 'Generate task content for a gifted 10-11 year old student. Return ONLY the plain content lines, no JSON, no markdown. For quiz/science/history/geography: one question per line as: Question text|Correct answer|Wrong option 1|Wrong option 2|Wrong option 3. For writing: return just the prompt paragraph. For spelling: word|memory hint, one per line.';
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, system: sys,
-        messages: [{ role: 'user', content: 'Subject: ' + subj + '. Request: ' + promptEl.value.trim() }] })
-    });
-    if (!resp.ok) throw new Error('API error ' + resp.status);
-    const data = await resp.json();
-    const text = (data.content?.[0]?.text || '').replace(/```[^\n]*\n?/g, '').trim();
+    let text = await callClaude(sys, 'Subject: ' + subj + '. Request: ' + promptEl.value.trim());
+    text = text.split('\n').filter(l => !l.startsWith('```')).join('\n').trim();
+
     const tc = document.getElementById('tc'+taskId);
     if (tc) tc.value = text;
     setTaskTab(taskId, 'text');
@@ -569,6 +603,70 @@ document.addEventListener('paste', function(e) {
   };
   reader.readAsDataURL(imgItem.getAsFile());
 });
+
+
+// ── API KEY MANAGEMENT ────────────────────────────────────
+function getApiKey() {
+  try { return localStorage.getItem('anthropic_api_key') || ''; } catch(e) { return ''; }
+}
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  const status = document.getElementById('api-key-status');
+  if (!key) {
+    try { localStorage.removeItem('anthropic_api_key'); } catch(e) {}
+    status.textContent = 'API key cleared';
+    status.style.color = '#94a3b8';
+    return;
+  }
+  if (!key.startsWith('sk-ant-')) {
+    status.textContent = '⚠️ Key should start with sk-ant-';
+    status.style.color = '#f59e0b';
+    return;
+  }
+  try { localStorage.setItem('anthropic_api_key', key); } catch(e) {}
+  status.textContent = '✓ Key saved on this device';
+  status.style.color = '#16a34a';
+  document.getElementById('api-key-input').value = '••••••••' + key.slice(-6);
+}
+
+function loadApiKeyDisplay() {
+  const key = getApiKey();
+  const status = document.getElementById('api-key-status');
+  if (key) {
+    document.getElementById('api-key-input').placeholder = '••••••••' + key.slice(-6);
+    status.textContent = '✓ API key saved on this device';
+    status.style.color = '#16a34a';
+  }
+}
+
+async function callAI(system, userMsg) {
+  const key = getApiKey();
+  if (!key) {
+    throw new Error('No API key set — add your Anthropic API key in the AI Settings card above');
+  }
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1200,
+      system: system,
+      messages: [{ role: 'user', content: userMsg }]
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'API error ' + resp.status);
+  }
+  const data = await resp.json();
+  return (data.content?.[0]?.text || '').replace(/\`\`\`json|\`\`\`/g, '').trim();
+}
 
 </script>
 </body>
