@@ -407,14 +407,15 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
   <div id="av-panel-avatar" class="av-panel">
     <div style="display:flex;gap:10px">
       <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:7px">
-        <canvas id="avatar-canvas" width="96" height="140" style="border-radius:12px;border:2.5px solid #e5e7eb;image-rendering:pixelated;width:96px;height:140px"></canvas>
+        <canvas id="avatar-canvas" width="200" height="280" style="border-radius:16px;border:2.5px solid #e5e7eb;width:200px;height:280px"></canvas>
         <div id="av-pet-display" style="font-size:26px;min-height:32px;text-align:center"></div>
         <div style="font-size:11px;font-weight:800;color:#4f46e5">Tom</div>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;gap:5px">
         <div style="font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">Customise</div>
         <button class="av-cat-btn active" id="avcat-skin" onclick="setAvCat('skin')">🎨 Skin &amp; Hair</button>
-        <button class="av-cat-btn" id="avcat-top" onclick="setAvCat('top')">👕 Tops &amp; Capes</button>
+        <button class="av-cat-btn" id="avcat-top" onclick="setAvCat('top'); // and bottom">👕 Tops &amp; Capes</button>
+      <button class="av-cat-btn" onclick="setAvCat('bottom')" id="avcat-bottom">👖 Bottoms</button>
         <button class="av-cat-btn" id="avcat-hat" onclick="setAvCat('hat')">🎩 Hats</button>
         <button class="av-cat-btn" id="avcat-accessory" onclick="setAvCat('accessory')">✨ Accessories</button>
         <button class="av-cat-btn" id="avcat-bg" onclick="setAvCat('bg')">🌄 Background</button>
@@ -1088,15 +1089,29 @@ const AV_CATALOGUE = [
   {id:'hair_red',     cat:'skin', label:'Red hair',     cost:40,  milestoneXP:0,   skin:null,     hair:'#c0392b',eye:null},
   {id:'hair_black',   cat:'skin', label:'Black hair',   cost:0,   milestoneXP:0,   skin:null,     hair:'#1a0a00',eye:null},
   {id:'hair_blue',    cat:'skin', label:'Blue hair',    cost:60,  milestoneXP:0,   skin:null,     hair:'#2563eb',eye:null},
-  // TOPS
-  {id:'top_none',    cat:'top', label:'No top',      cost:0,  milestoneXP:0,   topColor:''},
-  {id:'top_blue',    cat:'top', label:'Blue shirt',  cost:0,  milestoneXP:0,   topColor:'#3b82f6'},
-  {id:'top_red',     cat:'top', label:'Red shirt',   cost:0,  milestoneXP:0,   topColor:'#ef4444'},
-  {id:'top_green',   cat:'top', label:'Green tee',   cost:20, milestoneXP:0,   topColor:'#22c55e'},
-  {id:'top_cape_p',  cat:'top', label:'Purple cape', cost:50, milestoneXP:0,   topColor:'#7c3aed', isCape:true},
-  {id:'top_cape_r',  cat:'top', label:'Red cape',    cost:60, milestoneXP:0,   topColor:'#dc2626', isCape:true},
-  {id:'top_cape_g',  cat:'top', label:'Gold cape',   cost:80, milestoneXP:0,   topColor:'#d97706', isCape:true},
-  {id:'top_armour',  cat:'top', label:'Armour',      cost:120,milestoneXP:0,   topColor:'#9ca3af', isArmour:true},
+  // TOPS (no 'no top' option — Tom always has clothing)
+  {id:'top_blue',     cat:'top', label:'Blue shirt',      cost:0,   milestoneXP:0,   topColor:'#3b82f6'},
+  {id:'top_red',      cat:'top', label:'Red shirt',       cost:0,   milestoneXP:0,   topColor:'#ef4444'},
+  {id:'top_green',    cat:'top', label:'Green tee',       cost:0,   milestoneXP:0,   topColor:'#22c55e'},
+  {id:'top_yellow',   cat:'top', label:'Yellow tee',      cost:15,  milestoneXP:0,   topColor:'#f59e0b'},
+  {id:'top_purple',   cat:'top', label:'Purple hoodie',   cost:25,  milestoneXP:0,   topColor:'#8b5cf6', isHoodie:true},
+  {id:'top_orange',   cat:'top', label:'Orange hoodie',   cost:25,  milestoneXP:0,   topColor:'#f97316', isHoodie:true},
+  {id:'top_jacket_b', cat:'top', label:'Blue jacket',     cost:40,  milestoneXP:0,   topColor:'#1d4ed8', isJacket:true},
+  {id:'top_jacket_k', cat:'top', label:'Black jacket',    cost:40,  milestoneXP:0,   topColor:'#1e293b', isJacket:true},
+  {id:'top_jacket_g', cat:'top', label:'Green jacket',    cost:45,  milestoneXP:0,   topColor:'#15803d', isJacket:true},
+  {id:'top_cape_p',   cat:'top', label:'Purple cape',     cost:50,  milestoneXP:0,   topColor:'#7c3aed', isCape:true},
+  {id:'top_cape_r',   cat:'top', label:'Red cape',        cost:60,  milestoneXP:0,   topColor:'#dc2626', isCape:true},
+  {id:'top_cape_g',   cat:'top', label:'Gold cape',       cost:80,  milestoneXP:0,   topColor:'#d97706', isCape:true},
+  {id:'top_armour',   cat:'top', label:'Armour',          cost:120, milestoneXP:0,   topColor:'#9ca3af', isArmour:true},
+  // BOTTOMS (pants, shorts, jeans)
+  {id:'bot_jeans',    cat:'bottom', label:'Blue jeans',   cost:0,   milestoneXP:0,   botColor:'#1d4ed8'},
+  {id:'bot_black',    cat:'bottom', label:'Black pants',  cost:0,   milestoneXP:0,   botColor:'#1e293b'},
+  {id:'bot_grey',     cat:'bottom', label:'Grey pants',   cost:15,  milestoneXP:0,   botColor:'#6b7280'},
+  {id:'bot_shorts_b', cat:'bottom', label:'Blue shorts',  cost:20,  milestoneXP:0,   botColor:'#3b82f6', isShorts:true},
+  {id:'bot_shorts_r', cat:'bottom', label:'Red shorts',   cost:20,  milestoneXP:0,   botColor:'#ef4444', isShorts:true},
+  {id:'bot_shorts_g', cat:'bottom', label:'Green shorts', cost:20,  milestoneXP:0,   botColor:'#22c55e', isShorts:true},
+  {id:'bot_camo',     cat:'bottom', label:'Camo pants',   cost:35,  milestoneXP:0,   botColor:'#4b5320'},
+  {id:'bot_gold',     cat:'bottom', label:'Gold pants',   cost:60,  milestoneXP:0,   botColor:'#d97706'},
   // HATS
   {id:'hat_none',    cat:'hat', label:'No hat',      cost:0,  milestoneXP:0,   hatEmoji:''},
   {id:'hat_cap',     cat:'hat', label:'Cap',         cost:0,  milestoneXP:0,   hatEmoji:'🧢'},
@@ -1172,8 +1187,8 @@ let state={
   ],1:[],2:[],3:[],4:[]},
   nextId:10,wsTaskId:null,slTaskId:null,
   // avatar state
-  avatar:{skin:'skin_light',top:'top_blue',hat:'hat_none',accessory:'acc_none',bg:'bg_plain',pet:null},
-  ownedItems:new Set(['skin_light','skin_medium','skin_dark','skin_tan','hair_black','top_none','top_blue','top_red','hat_none','acc_none','bg_plain','pet_none']),
+  avatar:{skin:'skin_light',top:'top_blue',bottom:'bot_jeans',hat:'hat_none',accessory:'acc_none',bg:'bg_plain',pet:null},
+  ownedItems:new Set(['skin_light','skin_medium','skin_dark','skin_tan','hair_black','top_blue','bot_jeans','top_red','hat_none','acc_none','bg_plain','pet_none']),
   homeLayout:[],// [{id,x,y}]
   currentPet:null,
   avCat:'skin',
@@ -1222,131 +1237,173 @@ function drawAvatar(canvasId, scale){
   if(!canvas)return;
   const ctx=canvas.getContext('2d');
   const W=canvas.width, H=canvas.height;
-  const sc=scale||1;
   ctx.clearRect(0,0,W,H);
-
   const av=state.avatar;
   const skinItem=getItem(av.skin)||getItem('skin_light');
-  // find applied hair separately (skin item may override hair)
-  const hairColor=skinItem.hair||'#8B4513';
   const skinColor=skinItem.skin||'#FFDBB5';
   const eyeColor=skinItem.eye||'#3d2b1f';
-
-  // check for hair override items
-  let finalHair=hairColor;
-  const hairOverride=AV_CATALOGUE.find(x=>x.cat==='skin'&&x.hair&&x.id!==av.skin&&isOwned(x.id)&&av.skin===x.id);
-  // actually just use skin item's hair
-
+  let finalHair=skinItem.hair||'#8B4513';
+  if(av.hair){const hi=getItem(av.hair);if(hi&&hi.hair)finalHair=hi.hair;}
+  // Layout
+  const cx=W/2;
+  const headR=W*0.19, headCY=H*0.22;
+  const neckW=W*0.09, neckH=H*0.04;
+  const shoulderY=headCY+headR+neckH;
+  const torsoW=W*0.36, torsoH=H*0.24;
+  const armW=W*0.09, armH=torsoH*0.9;
+  const handR=W*0.055;
+  const legW=W*0.13, legH=H*0.22;
+  const footW=W*0.15, footH=H*0.035;
+  const legGap=W*0.04;
   // BG
   const bgItem=getItem(av.bg)||getItem('bg_plain');
-  const [bgTop,bgBot]=bgItem.bgColors||['#f0f4ff','#e5e7eb'];
+  const[bgTop,bgBot]=bgItem.bgColors||['#f0f4ff','#e5e7eb'];
   const grad=ctx.createLinearGradient(0,0,0,H);
   grad.addColorStop(0,bgTop);grad.addColorStop(1,bgBot);
   ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
-
-  const cx=Math.floor(W/2);
-  const headY=Math.floor(H*0.12);
-  const headW=Math.floor(W*0.38);
-  const headH=Math.floor(H*0.3);
-  const bodyY=headY+headH;
-  const bodyH=Math.floor(H*0.32);
-  const bodyW=Math.floor(W*0.32);
-  const legH=Math.floor(H*0.22);
-
-  // CAPE (behind body)
-  const topItem=getItem(av.top);
-  if(topItem&&topItem.isCape){
-    ctx.fillStyle=topItem.topColor;
+  // Clothing
+  const botItem=getItem(av.bottom)||getItem('bot_jeans');
+  const botColor=botItem?botItem.botColor:'#1d4ed8';
+  const isShorts=botItem&&botItem.isShorts;
+  const topItem=getItem(av.top)||getItem('top_blue');
+  const topColor=topItem?topItem.topColor||skinColor:skinColor;
+  const isCape=topItem&&topItem.isCape;
+  const isJacket=topItem&&topItem.isJacket;
+  const isHoodie=topItem&&topItem.isHoodie;
+  const isArmour=topItem&&topItem.isArmour;
+  // Helper
+  function rr(x,y,w,h,r){
+    if(typeof r==='number')r={tl:r,tr:r,bl:r,br:r};
     ctx.beginPath();
-    ctx.moveTo(cx-bodyW*0.6,bodyY);
-    ctx.lineTo(cx+bodyW*0.6,bodyY);
-    ctx.lineTo(cx+bodyW*0.9,bodyY+bodyH+legH*0.6);
-    ctx.lineTo(cx-bodyW*0.9,bodyY+bodyH+legH*0.6);
+    ctx.moveTo(x+(r.tl||0),y);ctx.lineTo(x+w-(r.tr||0),y);ctx.quadraticCurveTo(x+w,y,x+w,y+(r.tr||0));
+    ctx.lineTo(x+w,y+h-(r.br||0));ctx.quadraticCurveTo(x+w,y+h,x+w-(r.br||0),y+h);
+    ctx.lineTo(x+(r.bl||0),y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-(r.bl||0));
+    ctx.lineTo(x,y+(r.tl||0));ctx.quadraticCurveTo(x,y,x+(r.tl||0),y);
+    ctx.closePath();
+  }
+  // CAPE behind body
+  if(isCape){
+    ctx.fillStyle=topColor;
+    ctx.beginPath();ctx.moveTo(cx-torsoW*0.7,shoulderY);ctx.lineTo(cx+torsoW*0.7,shoulderY);
+    ctx.quadraticCurveTo(cx+torsoW*1.1,shoulderY+torsoH+legH*0.6,cx,shoulderY+torsoH+legH*0.8);
+    ctx.quadraticCurveTo(cx-torsoW*1.1,shoulderY+torsoH+legH*0.6,cx-torsoW*0.7,shoulderY);
+    ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.12)';
+    ctx.beginPath();ctx.moveTo(cx-torsoW*0.3,shoulderY);
+    ctx.quadraticCurveTo(cx-torsoW*0.1,shoulderY+torsoH*0.5,cx-torsoW*0.4,shoulderY+torsoH+legH*0.4);
+    ctx.quadraticCurveTo(cx-torsoW*0.6,shoulderY+torsoH*0.5,cx-torsoW*0.7,shoulderY);
     ctx.closePath();ctx.fill();
   }
-
   // LEGS
-  ctx.fillStyle=skinColor;
-  const legW=Math.floor(bodyW*0.38);
-  ctx.fillRect(cx-bodyW*0.3,bodyY+bodyH,legW,legH);
-  ctx.fillRect(cx+bodyW*0.3-legW,bodyY+bodyH,legW,legH);
-  // shoes
-  ctx.fillStyle='#1a1a2e';
-  ctx.fillRect(cx-bodyW*0.3-2,bodyY+bodyH+legH-5,legW+4,6);
-  ctx.fillRect(cx+bodyW*0.3-legW-2,bodyY+bodyH+legH-5,legW+4,6);
-
-  // BODY
-  if(topItem&&!topItem.isCape&&topItem.topColor){
-    ctx.fillStyle=topItem.topColor;
-  } else if(topItem&&topItem.isArmour){
-    ctx.fillStyle='#9ca3af';
-  } else {
+  const legTopY=shoulderY+torsoH;
+  const legBotY=legTopY+(isShorts?legH*0.42:legH);
+  rr(cx-legGap-legW,legTopY,legW,isShorts?legH*0.42:legH,5);ctx.fillStyle=botColor;ctx.fill();
+  rr(cx+legGap,legTopY,legW,isShorts?legH*0.42:legH,5);ctx.fillStyle=botColor;ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.1)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(cx-legGap-legW*0.5,legTopY+4);ctx.lineTo(cx-legGap-legW*0.5,legBotY-6);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx+legGap+legW*0.5,legTopY+4);ctx.lineTo(cx+legGap+legW*0.5,legBotY-6);ctx.stroke();
+  // Shorts skin
+  if(isShorts){
     ctx.fillStyle=skinColor;
+    rr(cx-legGap-legW,legTopY+legH*0.42,legW,legH*0.58,5);ctx.fill();
+    rr(cx+legGap,legTopY+legH*0.42,legW,legH*0.58,5);ctx.fill();
   }
-  ctx.fillRect(cx-bodyW/2,bodyY,bodyW,bodyH);
-
-  // ARMOUR detail
-  if(topItem&&topItem.isArmour){
+  // SHOES
+  ctx.fillStyle='#1e293b';
+  rr(cx-legGap-legW-footW*0.15,legBotY,footW,footH,footH/2);ctx.fill();
+  rr(cx+legGap-footW*0.15,legBotY,footW,footH,footH/2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.15)';
+  rr(cx-legGap-legW,legBotY+1,legW*0.6,footH*0.5,2);ctx.fill();
+  rr(cx+legGap+legW*0.1,legBotY+1,legW*0.6,footH*0.5,2);ctx.fill();
+  // TORSO
+  rr(cx-torsoW/2,shoulderY,torsoW,torsoH,8);ctx.fillStyle=topColor;ctx.fill();
+  if(isJacket){
+    ctx.fillStyle='rgba(0,0,0,0.15)';
+    ctx.beginPath();ctx.moveTo(cx,shoulderY+torsoH*0.1);ctx.lineTo(cx-torsoW*0.18,shoulderY+torsoH*0.4);ctx.lineTo(cx,shoulderY+torsoH*0.35);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(cx,shoulderY+torsoH*0.1);ctx.lineTo(cx+torsoW*0.18,shoulderY+torsoH*0.4);ctx.lineTo(cx,shoulderY+torsoH*0.35);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    [0.45,0.62,0.78].forEach(t=>{ctx.beginPath();ctx.arc(cx,shoulderY+torsoH*t,2.5,0,Math.PI*2);ctx.fill();});
+  } else if(isHoodie){
+    ctx.fillStyle='rgba(0,0,0,0.12)';
+    rr(cx-torsoW*0.3,shoulderY+torsoH*0.55,torsoW*0.6,torsoH*0.3,6);ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(cx-5,shoulderY+torsoH*0.12);ctx.lineTo(cx-5,shoulderY+torsoH*0.36);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx+5,shoulderY+torsoH*0.12);ctx.lineTo(cx+5,shoulderY+torsoH*0.36);ctx.stroke();
+  } else if(isArmour){
     ctx.fillStyle='#d1d5db';
-    ctx.fillRect(cx-bodyW/2+3,bodyY+4,bodyW-6,6);
-    ctx.fillRect(cx-3,bodyY,6,bodyH);
+    rr(cx-torsoW*0.35,shoulderY+torsoH*0.1,torsoW*0.7,torsoH*0.55,4);ctx.fill();
+    ctx.strokeStyle='#9ca3af';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(cx,shoulderY+torsoH*0.1);ctx.lineTo(cx,shoulderY+torsoH*0.65);ctx.stroke();
+    ctx.fillStyle='#6b7280';
+    [[cx-torsoW*0.2,shoulderY+torsoH*0.25],[cx+torsoW*0.2,shoulderY+torsoH*0.25],[cx-torsoW*0.2,shoulderY+torsoH*0.5],[cx+torsoW*0.2,shoulderY+torsoH*0.5]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();});
+  } else {
+    ctx.fillStyle='rgba(255,255,255,0.2)';
+    ctx.beginPath();ctx.moveTo(cx-torsoW*0.15,shoulderY);ctx.lineTo(cx,shoulderY+torsoH*0.12);ctx.lineTo(cx+torsoW*0.15,shoulderY);ctx.closePath();ctx.fill();
   }
-
+  ctx.fillStyle='rgba(0,0,0,0.06)';rr(cx+torsoW*0.15,shoulderY,torsoW*0.35,torsoH,{tr:8,br:8,tl:0,bl:0});ctx.fill();
   // ARMS
+  ctx.fillStyle=topColor;
+  rr(cx-torsoW/2-armW,shoulderY+torsoH*0.05,armW,armH,armW/2);ctx.fill();
+  rr(cx+torsoW/2,shoulderY+torsoH*0.05,armW,armH,armW/2);ctx.fill();
   ctx.fillStyle=skinColor;
-  const armW=Math.floor(bodyW*0.22);
-  const armH=Math.floor(bodyH*0.85);
-  ctx.fillRect(cx-bodyW/2-armW,bodyY+4,armW,armH);
-  ctx.fillRect(cx+bodyW/2,bodyY+4,armW,armH);
-
-  // HAIR (back)
-  ctx.fillStyle=finalHair;
-  ctx.fillRect(cx-headW/2-2,headY+4,headW+4,Math.floor(headH*0.55));
-
+  ctx.beginPath();ctx.arc(cx-torsoW/2-armW/2,shoulderY+torsoH*0.05+armH,handR,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(cx+torsoW/2+armW/2,shoulderY+torsoH*0.05+armH,handR,0,Math.PI*2);ctx.fill();
+  // NECK
+  ctx.fillStyle=skinColor;ctx.fillRect(cx-neckW/2,headCY+headR-2,neckW,neckH+4);
+  // HAIR back
+  ctx.fillStyle=finalHair;ctx.beginPath();ctx.arc(cx,headCY,headR+3,0,Math.PI*2);ctx.fill();
   // HEAD
+  ctx.fillStyle=skinColor;ctx.beginPath();ctx.arc(cx,headCY,headR,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,0.05)';ctx.beginPath();ctx.arc(cx+headR*0.35,headCY+headR*0.1,headR*0.65,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.15)';ctx.beginPath();ctx.arc(cx-headR*0.3,headCY-headR*0.3,headR*0.4,0,Math.PI*2);ctx.fill();
+  // EARS
   ctx.fillStyle=skinColor;
-  ctx.beginPath();
-  ctx.roundRect(cx-headW/2,headY,headW,headH,6);
-  ctx.fill();
-
-  // HAIR (top)
-  ctx.fillStyle=finalHair;
-  ctx.fillRect(cx-headW/2,headY,headW,Math.floor(headH*0.25));
-  // side hair
-  ctx.fillRect(cx-headW/2,headY,6,Math.floor(headH*0.5));
-  ctx.fillRect(cx+headW/2-6,headY,6,Math.floor(headH*0.5));
-
+  ctx.beginPath();ctx.ellipse(cx-headR,headCY+headR*0.1,headR*0.18,headR*0.25,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(cx+headR,headCY+headR*0.1,headR*0.18,headR*0.25,0,0,Math.PI*2);ctx.fill();
+  // HAIR front
+  ctx.fillStyle=finalHair;ctx.beginPath();ctx.arc(cx,headCY-headR*0.15,headR,Math.PI,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.12)';ctx.lineWidth=1.5;
+  for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(cx+i*headR*0.3,headCY-headR);ctx.quadraticCurveTo(cx+i*headR*0.5,headCY-headR*0.3,cx+i*headR*0.4,headCY-headR*0.05);ctx.stroke();}
   // EYES
-  const eyeY=headY+Math.floor(headH*0.42);
-  ctx.fillStyle=eyeColor;
-  ctx.fillRect(cx-headW*0.22,eyeY,5,6);
-  ctx.fillRect(cx+headW*0.22-5,eyeY,5,6);
-  // eye whites
+  const eyeY=headCY+headR*0.05, eyeOX=headR*0.35;
+  const eyeW=headR*0.32, eyeH=headR*0.28;
   ctx.fillStyle='#fff';
-  ctx.fillRect(cx-headW*0.22-1,eyeY-1,3,3);
-  ctx.fillRect(cx+headW*0.22-4,eyeY-1,3,3);
-
-  // MOUTH (smile)
-  ctx.fillStyle='#c0392b';
-  ctx.fillRect(cx-6,headY+Math.floor(headH*0.68),4,3);
-  ctx.fillRect(cx-2,headY+Math.floor(headH*0.71),8,3);
-  ctx.fillRect(cx+6,headY+Math.floor(headH*0.68),4,3);
-
-  // HAT emoji overlay
+  ctx.beginPath();ctx.ellipse(cx-eyeOX,eyeY,eyeW,eyeH,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(cx+eyeOX,eyeY,eyeW,eyeH,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=eyeColor;
+  ctx.beginPath();ctx.arc(cx-eyeOX,eyeY,eyeW*0.65,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(cx+eyeOX,eyeY,eyeW*0.65,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#000';
+  ctx.beginPath();ctx.arc(cx-eyeOX,eyeY,eyeW*0.32,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(cx+eyeOX,eyeY,eyeW*0.32,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.beginPath();ctx.arc(cx-eyeOX+eyeW*0.2,eyeY-eyeH*0.2,eyeW*0.15,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(cx+eyeOX+eyeW*0.2,eyeY-eyeH*0.2,eyeW*0.15,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.6)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(cx-eyeOX,eyeY,eyeW,Math.PI+0.3,Math.PI*2-0.3);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx+eyeOX,eyeY,eyeW,Math.PI+0.3,Math.PI*2-0.3);ctx.stroke();
+  // Eyebrows
+  ctx.fillStyle=finalHair;
+  rr(cx-eyeOX-eyeW*0.8,eyeY-eyeH*1.5,eyeW*1.5,eyeH*0.4,3);ctx.fill();
+  rr(cx+eyeOX-eyeW*0.7,eyeY-eyeH*1.5,eyeW*1.5,eyeH*0.4,3);ctx.fill();
+  // NOSE
+  ctx.strokeStyle='rgba(0,0,0,0.12)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(cx-headR*0.08,headCY+headR*0.17);ctx.lineTo(cx,headCY+headR*0.3);ctx.lineTo(cx+headR*0.08,headCY+headR*0.17);ctx.stroke();
+  // MOUTH
+  const mY=headCY+headR*0.52, mW=headR*0.45;
+  ctx.strokeStyle='#c0392b';ctx.lineWidth=headR*0.07;ctx.lineCap='round';
+  ctx.beginPath();ctx.arc(cx,mY,mW,0.2,Math.PI-0.2);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx,mY,mW*0.85,0.4,Math.PI-0.4);ctx.fill();
+  // CHEEKS
+  ctx.fillStyle='rgba(255,150,120,0.2)';
+  ctx.beginPath();ctx.arc(cx-headR*0.58,headCY+headR*0.35,headR*0.22,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(cx+headR*0.58,headCY+headR*0.35,headR*0.22,0,Math.PI*2);ctx.fill();
+  // HAT
   const hatItem=getItem(av.hat);
-  if(hatItem&&hatItem.hatEmoji){
-    ctx.font=`${Math.floor(headW*0.7)}px serif`;
-    ctx.textAlign='center';
-    ctx.fillText(hatItem.hatEmoji,cx,headY+2);
-  }
-
-  // ACCESSORY emoji
+  if(hatItem&&hatItem.hatEmoji){ctx.font=Math.floor(headR*1.5)+'px serif';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(hatItem.hatEmoji,cx,headCY-headR*0.7);}
+  // ACCESSORY
   const accItem=getItem(av.accessory);
-  if(accItem&&accItem.accEmoji){
-    ctx.font=`${Math.floor(bodyW*0.55)}px serif`;
-    ctx.textAlign='center';
-    ctx.fillText(accItem.accEmoji,cx+bodyW*0.75,bodyY+bodyH*0.5);
-  }
+  if(accItem&&accItem.accEmoji){ctx.font=Math.floor(torsoW*0.55)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(accItem.accEmoji,cx+torsoW*0.75,shoulderY+torsoH*0.5);}
 }
 
 function renderMiniAvatar(){
@@ -1503,7 +1560,12 @@ function openPurchaseModal(item){
     state.ownedItems.add(item.id);
     closeModal();
     if(item.cat==='pet')setPet(item.id);
-    else{state.avatar[item.cat]=item.id;drawAvatar('avatar-canvas');renderMiniAvatar();}
+    else{if(item.cat==='skin'&&item.hair&&!item.skin){
+      // hair colour override — store separately
+      state.avatar.hair=item.id;
+    } else {
+      state.avatar[item.cat]=item.id;
+    }drawAvatar('avatar-canvas');renderMiniAvatar();}
     renderAvItems();renderShop();renderPets();
     document.getElementById('av-xp').textContent=state.xp;
     document.getElementById('shop-xp').textContent=state.xp;
