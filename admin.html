@@ -881,21 +881,38 @@ function closeQBModal(){document.getElementById('qb-modal').classList.remove('op
 function qbmLoadSubs(){const id=document.getElementById('qbm-cat').value,sel=document.getElementById('qbm-sub');sel.innerHTML='';const cat=MATHS_BANK[id];if(!cat)return;Object.entries(cat.subcategories).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v.label+' ('+v.questions.length+' q)';sel.appendChild(o);});}
 function qbmPreview(){const qs=getMathsQuestions(document.getElementById('qbm-cat').value,document.getElementById('qbm-sub').value,parseInt(document.getElementById('qbm-count').value)||10);const p=document.getElementById('qbm-prev');p.textContent=qs.map((q,i)=>(i+1)+'. '+q.q+'\n   ✓ '+q.a).join('\n\n');p.style.display='block';}
 async function qbmInsert(){
-  if(!qbModalTaskId){toast('No task selected');return;}
-  const qs=getMathsQuestions(document.getElementById('qbm-cat').value,document.getElementById('qbm-sub').value,parseInt(document.getElementById('qbm-count').value)||10);
-  if(!qs.length){toast('No questions found');return;}
-  const st=document.getElementById('qbm-status');st.textContent='Saving…';st.style.color='#64748b';
-  const fmt=qs.map(q=>q.q+'|'+q.a+'|'+generateWrongAnswers(q.a,q.q).join('|')).join('\n');
-  // Use parseInt to ensure ID is always a number for Supabase
-  const taskId=parseInt(qbModalTaskId);
-  if(!taskId){st.textContent='Error: invalid task ID';st.style.color='#dc2626';return;}
-  const{data,error}=await db.from('tasks').update({activity_content:fmt,updated_at:new Date()}).eq('id',taskId).select();
-  if(error){st.textContent='Error: '+error.message;st.style.color='#dc2626';return;}
-  if(!data||!data.length){st.textContent='Error: task not found in DB (ID='+taskId+')';st.style.color='#dc2626';return;}
-  const t=tasks.find(x=>x.id===taskId);if(t)t.activity_content=fmt;
-  const tc=document.getElementById('tc'+taskId);if(tc)tc.value=fmt;
-  st.textContent='✓ '+qs.length+' questions inserted!';st.style.color='#16a34a';
-  rdTasks();setTimeout(closeQBModal,800);toast('✓ '+qs.length+' questions added!');
+  const st=document.getElementById('qbm-status');
+  try {
+    if(!qbModalTaskId){toast('No task selected');return;}
+    const qs=getMathsQuestions(
+      document.getElementById('qbm-cat').value,
+      document.getElementById('qbm-sub').value,
+      parseInt(document.getElementById('qbm-count').value)||10
+    );
+    if(!qs.length){toast('No questions found');return;}
+    st.textContent='Saving…';st.style.color='#64748b';
+    const taskId=parseInt(qbModalTaskId);
+    if(!taskId){st.textContent='Error: invalid task ID ('+qbModalTaskId+')';st.style.color='#dc2626';return;}
+    st.textContent='Building questions…';
+    const fmt=qs.map(q=>q.q+'|'+q.a+'|'+generateWrongAnswers(q.a,q.q).join('|')).join('\n');
+    st.textContent='Sending to database (task '+taskId+')…';
+    const result=await db.from('tasks').update({activity_content:fmt,updated_at:new Date()}).eq('id',taskId).select();
+    st.textContent='DB responded: error='+(result.error?result.error.message:'none')+' rows='+(result.data?result.data.length:0);
+    if(result.error){st.style.color='#dc2626';return;}
+    if(!result.data||!result.data.length){
+      // Try without .select() — some Supabase configs block it
+      const r2=await db.from('tasks').update({activity_content:fmt,updated_at:new Date()}).eq('id',taskId);
+      if(r2.error){st.textContent='Error: '+r2.error.message;st.style.color='#dc2626';return;}
+      st.textContent='Saved via fallback';
+    }
+    const t=tasks.find(x=>x.id===taskId);if(t)t.activity_content=fmt;
+    const tc=document.getElementById('tc'+taskId);if(tc)tc.value=fmt;
+    st.textContent='✓ '+qs.length+' questions inserted!';st.style.color='#16a34a';
+    rdTasks();setTimeout(closeQBModal,1200);toast('✓ '+qs.length+' questions added!');
+  } catch(e) {
+    st.textContent='Exception: '+e.message;st.style.color='#dc2626';
+    console.error('qbmInsert error:',e);
+  }
 }
 document.getElementById('qb-modal').addEventListener('click',e=>{if(e.target===document.getElementById('qb-modal'))closeQBModal();});
 
