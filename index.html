@@ -1075,7 +1075,7 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
       <input id="sb-key-input" type="text" placeholder="eyJhbGciOi..." style="width:100%;padding:10px;border-radius:10px;border:none;font-family:'Nunito','Segoe UI',-apple-system,sans-serif;font-size:13px;outline:none">
     </div>
     <button onclick="saveSbConfig()" style="width:100%;padding:13px;border-radius:13px;border:none;background:#fbbf24;color:#1a1a2e;font-family:'Nunito','Segoe UI',-apple-system,sans-serif;font-size:15px;font-weight:900;cursor:pointer;margin-top:10px">Connect &amp; start →</button>
-    <div style="color:rgba(255,255,255,0.5);font-size:10px;font-weight:600;margin-top:10px">Or <button onclick="hideSbSetup();renderAll();" style="background:none;border:none;color:rgba(255,255,255,0.6);font-family:'Nunito','Segoe UI',-apple-system,sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline">continue offline</button> (progress won't save across devices)</div>
+    <div style="color:rgba(255,255,255,0.5);font-size:10px;font-weight:600;margin-top:10px">Or <button onclick="hideSbSetup();renderAll();setTimeout(function(){renderMonsterHUD();renderMiniAvatar();if(!monsterState.starterChosen)setTimeout(showStarterQuiz,1500);},300);" style="background:none;border:none;color:rgba(255,255,255,0.6);font-family:'Nunito','Segoe UI',-apple-system,sans-serif;font-size:10px;font-weight:700;cursor:pointer;text-decoration:underline">continue offline</button> (progress won't save across devices)</div>
   </div>
 </div>
 
@@ -3574,15 +3574,22 @@ function loadQBankQ() {
 let sbClient = null;
 
 function getSupabaseConfig() {
-  try {
-    return { url: localStorage.getItem('sb_url')||'', key: localStorage.getItem('sb_key')||'' };
-  } catch(e) { return {url:'',key:''}; }
+  return { url: 'https://qfjwwoxmnatfagqjkgpv.supabase.co', key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmand3b3htbmF0ZmFncWprZ3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMzcyNTgsImV4cCI6MjA4OTgxMzI1OH0.4pGQPBwk9Off59LHHcPKzrSSDwINJcTv0EpGkbjH5Hc' };
 }
 
 async function initSupabaseSync() {
   const {url,key} = getSupabaseConfig();
-  if (!url||!key) { showSbSetup(); return false; }
   try {
+    // Wait for supabase library to load
+    let attempts = 0;
+    while ((!window.supabase || !window.supabase.createClient) && attempts < 30) {
+      await new Promise(r => setTimeout(r, 100));
+      attempts++;
+    }
+    if (!window.supabase || !window.supabase.createClient) {
+      console.warn('Supabase library not available');
+      return false;
+    }
     sbClient = window.supabase.createClient(url, key);
     await loadFromSupabase();
     setInterval(async()=>{ await syncTasksFromSupabase(); renderAll(); }, 10000);
@@ -3675,9 +3682,7 @@ async function saveMoodToSupabase(entry) {
   } catch(e) { console.warn('saveMoodToSupabase error:',e.message); }
 }
 
-function showSbSetup() {
-  const o=document.getElementById('sb-setup-overlay'); if(o) o.style.display='flex';
-}
+function showSbSetup() { /* credentials hardcoded — setup not needed */ }
 function hideSbSetup() {
   const o=document.getElementById('sb-setup-overlay'); if(o) o.style.display='none';
 }
@@ -3686,7 +3691,16 @@ function saveSbConfig() {
   const key=document.getElementById('sb-key-input').value.trim();
   if(!url||!key){showToast('Enter both fields!');return;}
   try{ localStorage.setItem('sb_url',url); localStorage.setItem('sb_key',key); } catch(e){}
-  initSupabaseSync().then(()=>{renderAll();renderMonsterHUD();renderMiniAvatar();if(!monsterState.starterChosen)setTimeout(showStarterQuiz,1500);});
+  initSupabaseSync().then(function(ok){
+    hideSbSetup();
+    hideLoadPrompt();
+    renderAll();
+    setTimeout(function(){
+      renderMonsterHUD(); renderMiniAvatar();
+      if(!monsterState.starterChosen) setTimeout(showStarterQuiz,1500);
+      else showToast('Connected! Welcome back Tom 👋');
+    },300);
+  });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -5674,17 +5688,22 @@ if (localLoaded) {
 // Try Supabase first, then localStorage fallback
 initSupabaseSync().then(function(connected) {
   if (!connected) {
+    // No Supabase config — showSbSetup() was already called inside initSupabaseSync
+    // Try local storage as fallback while they set up
     var localLoaded = autoLoadLocal();
     if (localLoaded) {
       renderAll();
       setTimeout(function(){ renderMonsterHUD(); renderMiniAvatar(); }, 150);
-      showToast('Welcome back Tom! Progress restored.');
     } else {
-      setTimeout(showLoadPrompt, 600);
+      renderAll();
     }
   } else {
     renderAll();
-    setTimeout(function(){ renderMonsterHUD(); renderMiniAvatar(); if(!monsterState.starterChosen) setTimeout(showStarterQuiz,1500); }, 300);
+    setTimeout(function(){
+      renderMonsterHUD();
+      renderMiniAvatar();
+      if (!monsterState.starterChosen) setTimeout(showStarterQuiz, 1500);
+    }, 300);
   }
 });
 setInterval(autoSaveLocal, 120000);
