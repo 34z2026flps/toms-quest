@@ -105,6 +105,12 @@ select.fi{background:#fff}
         <input id="api-key-input" type="password" class="fi" placeholder="sk-ant-…" value="">
         <button class="btn bp sm" onclick="saveApiKey()">Save</button>
       </div>
+      <div class="fr" style="margin-top:8px">
+        <div class="fl">Proxy URL</div>
+        <input id="proxy-url-input" type="text" class="fi" placeholder="https://toms-quest-ai.YOUR-NAME.workers.dev" value="">
+        <button class="btn bp sm" onclick="saveProxyUrl()">Save</button>
+      </div>
+      <div id="proxy-url-status" style="font-size:11px;font-weight:700;margin-top:4px;min-height:16px;color:#64748b"></div>
       <div id="api-key-status" style="font-size:11px;font-weight:700;margin-top:6px;min-height:16px;color:#94a3b8"></div>
       <div style="font-size:10px;color:#94a3b8;margin-top:6px">Get a free key at <strong>console.anthropic.com</strong> → API Keys → Create Key. Free tier includes $5 credit.</div>
     </div>
@@ -350,14 +356,14 @@ function printDay(){
 // ── SHARED AI HELPER ─────────────────────────────────────
 async function callClaude(systemPrompt, userMessage) {
   const key = getApiKey();
+  const proxyUrl = getProxyUrl();
+  if (!proxyUrl) throw new Error('No proxy URL — enter your Cloudflare Worker URL in the AI Settings card');
   if (!key) throw new Error('No API key — enter your Anthropic API key in the AI Settings card');
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+  const resp = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
@@ -606,6 +612,18 @@ document.addEventListener('paste', function(e) {
 
 
 // ── API KEY MANAGEMENT ────────────────────────────────────
+
+function getProxyUrl() {
+  try { return localStorage.getItem('ai_proxy_url') || ''; } catch(e) { return ''; }
+}
+function saveProxyUrl() {
+  const url = document.getElementById('proxy-url-input').value.trim();
+  const st  = document.getElementById('proxy-url-status');
+  if (!url) { st.textContent = 'Enter a URL'; st.style.color='#dc2626'; return; }
+  try { localStorage.setItem('ai_proxy_url', url); } catch(e) {}
+  st.textContent = '✓ Proxy URL saved'; st.style.color = '#16a34a';
+}
+
 function getApiKey() {
   try { return localStorage.getItem('anthropic_api_key') || ''; } catch(e) { return ''; }
 }
