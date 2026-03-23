@@ -886,10 +886,14 @@ async function qbmInsert(){
   if(!qs.length){toast('No questions found');return;}
   const st=document.getElementById('qbm-status');st.textContent='Saving…';st.style.color='#64748b';
   const fmt=qs.map(q=>q.q+'|'+q.a+'|'+generateWrongAnswers(q.a,q.q).join('|')).join('\n');
-  const{error}=await db.from('tasks').update({activity_content:fmt,updated_at:new Date()}).eq('id',qbModalTaskId);
+  // Use parseInt to ensure ID is always a number for Supabase
+  const taskId=parseInt(qbModalTaskId);
+  if(!taskId){st.textContent='Error: invalid task ID';st.style.color='#dc2626';return;}
+  const{data,error}=await db.from('tasks').update({activity_content:fmt,updated_at:new Date()}).eq('id',taskId).select();
   if(error){st.textContent='Error: '+error.message;st.style.color='#dc2626';return;}
-  const t=tasks.find(x=>x.id===qbModalTaskId);if(t)t.activity_content=fmt;
-  const tc=document.getElementById('tc'+qbModalTaskId);if(tc)tc.value=fmt;
+  if(!data||!data.length){st.textContent='Error: task not found in DB (ID='+taskId+')';st.style.color='#dc2626';return;}
+  const t=tasks.find(x=>x.id===taskId);if(t)t.activity_content=fmt;
+  const tc=document.getElementById('tc'+taskId);if(tc)tc.value=fmt;
   st.textContent='✓ '+qs.length+' questions inserted!';st.style.color='#16a34a';
   rdTasks();setTimeout(closeQBModal,800);toast('✓ '+qs.length+' questions added!');
 }
