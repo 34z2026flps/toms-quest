@@ -56,11 +56,25 @@ select.field-input{background:#fff;}
 </head>
 <body>
 
-<div <div id="setup-screen" style="display:none;position:fixed;inset:0;z-index:100;background:#f0f4ff;align-items:center;justify-content:center;flex-direction:column;gap:12px">
-  <div style="font-size:32px">⏳</div>
-  <div style="font-size:15px;font-weight:800;color:#4f46e5">Connecting…</div>
-  <div id="connect-err" style="font-size:12px;color:#dc2626;font-weight:700;max-width:300px;text-align:center"></div>
+<div id="setup-screen" style="display:none">
+  <div class="container" style="max-width:500px;padding-top:40px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:36px">⚙️</div>
+      <h2 style="font-size:20px;font-weight:900;margin-top:8px">Connect to Supabase</h2>
+      <p style="font-size:13px;color:#6b7280;font-weight:600;margin-top:4px">Enter your Supabase project details once to get started</p>
+    </div>
+    <div class="supabase-setup">
+      <p>📋 Find these in your Supabase Dashboard → Project Settings → API</p>
+      <label style="font-size:11px;font-weight:700;color:#92400e">Project URL</label>
+      <input id="setup-url" type="text" placeholder="https://xxxxxxxxxxxx.supabase.co">
+      <label style="font-size:11px;font-weight:700;color:#92400e">Anon/Public Key</label>
+      <input id="setup-key" type="text" placeholder="eyJhbGciOi...">
+    </div>
+    <button class="btn btn-p" style="width:100%;padding:13px" onclick="saveSupabaseConfig()">Connect →</button>
+    <p style="font-size:11px;color:#9ca3af;font-weight:600;text-align:center;margin-top:10px">These are saved in your browser only</p>
+  </div>
 </div>
+
 <div id="pin-screen" style="display:none">
   <div class="pin-screen">
     <div style="font-size:40px">🔒</div>
@@ -149,44 +163,28 @@ function getSupabaseConfig() {
 function saveSupabaseConfig() {
   const url = document.getElementById('setup-url').value.trim();
   const key = document.getElementById('setup-key').value.trim();
-  const statusEl = document.getElementById('connect-status');
-  if (!url || !key) {
-    if (statusEl) { statusEl.textContent = 'Please enter both fields'; statusEl.style.color = '#dc2626'; }
-    return;
-  }
-  if (!url.startsWith('https://')) {
-    if (statusEl) { statusEl.textContent = 'URL should start with https://'; statusEl.style.color = '#dc2626'; }
-    return;
-  }
+  if (!url || !key) { alert('Please enter both fields'); return; }
   localStorage.setItem('sb_url', url);
   localStorage.setItem('sb_key', key);
   initSupabase(url, key);
 }
 
 async function initSupabase(url, key) {
-  // Show brief loading screen
-  const setup = document.getElementById('setup-screen');
-  if (setup) setup.style.display = 'flex';
   try {
-    let attempts = 0;
-    while ((!window.supabase || !window.supabase.createClient) && attempts < 30) {
-      await new Promise(r => setTimeout(r, 100));
-      attempts++;
+    let i = 0;
+    while ((!window.supabase || !window.supabase.createClient) && i < 40) {
+      await new Promise(r => setTimeout(r, 100)); i++;
     }
-    if (!window.supabase || !window.supabase.createClient) throw new Error('Library not loaded — check internet connection');
+    if (!window.supabase || !window.supabase.createClient) throw new Error('Library not loaded');
     supabase = window.supabase.createClient(url, key);
     const { error } = await supabase.from('quest_state').select('id').limit(1);
     if (error) throw new Error(error.message);
-    if (setup) setup.style.display = 'none';
+    document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('pin-screen').style.display = 'block';
   } catch(e) {
-    console.error('Supabase:', e.message);
-    const errEl = document.getElementById('connect-err');
-    if (errEl) errEl.textContent = 'Error: ' + e.message;
-    if (setup) setup.style.display = 'flex';
+    alert('Connection failed: ' + e.message);
   }
 }
-
 
 // ── PIN ──────────────────────────────────────────────────
 function checkPin() {
@@ -430,7 +428,6 @@ function showToast(m) {
 
 // ── INIT ──────────────────────────────────────────────────
 (function init() {
-  document.getElementById('setup-screen').style.display = 'none';
   initSupabase('https://qfjwwoxmnatfagqjkgpv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmand3b3htbmF0ZmFncWprZ3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMzcyNTgsImV4cCI6MjA4OTgxMzI1OH0.4pGQPBwk9Off59LHHcPKzrSSDwINJcTv0EpGkbjH5Hc');
 })();
 </script>
