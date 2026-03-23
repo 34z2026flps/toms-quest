@@ -220,7 +220,46 @@ function rdTasks(){
     +'<div class="fr"><div class="fl">Details</div><input class="fi" id="tm'+t.id+'" value="'+esc(t.meta)+'"></div>'
     +'<div class="fr"><div class="fl">Subject</div><select class="fi" id="ts'+t.id+'" style="max-width:120px">'+SUBJS.map(s=>'<option'+(s===t.subject?' selected':'')+'>'+s+'</option>').join('')+'</select><input class="fi num" type="number" id="tx'+t.id+'" value="'+t.xp+'" min="5" max="200" title="XP"><input class="fi num" type="number" id="tstep'+t.id+'" value="'+t.steps+'" min="1" max="20" title="Steps"></div>'
     +'<div class="fr"><div class="fl">Link</div><input class="fi" id="tl'+t.id+'" value="'+esc(t.link||'')+'" placeholder="YouTube / Google Slides URL"></div>'
-    +'<div class="fr" style="align-items:flex-start"><div class="fl">Content</div><textarea class="fi" id="tc'+t.id+'" placeholder="Writing prompt / questions (Q|answer|opt|opt|opt) / spelling (word|hint)">'+esc(t.activity_content||t.content||'')+'</textarea></div>'
+    +'<div class="fr" style="align-items:flex-start"><div class="fl">Content</div>'
+    +'<div style="flex:1">'
+    // Tabs for content types
+    +'<div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap">'
+    +'<button onclick="setTaskTab('+t.id+',\'text\')" id="ttab-text-'+t.id+'" style="padding:4px 10px;border-radius:7px;border:1.5px solid #4f46e5;background:#eef2ff;color:#4f46e5;font-family:inherit;font-size:10px;font-weight:800;cursor:pointer">📝 Text</button>'
+    +'<button onclick="setTaskTab('+t.id+',\'images\')" id="ttab-images-'+t.id+'" style="padding:4px 10px;border-radius:7px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;font-family:inherit;font-size:10px;font-weight:800;cursor:pointer">🖼️ Images</button>'
+    +'<button onclick="setTaskTab('+t.id+',\'quiz\')" id="ttab-quiz-'+t.id+'" style="padding:4px 10px;border-radius:7px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;font-family:inherit;font-size:10px;font-weight:800;cursor:pointer">❓ Quiz</button>'
+    +'<button onclick="setTaskTab('+t.id+',\'ai\')" id="ttab-ai-'+t.id+'" style="padding:4px 10px;border-radius:7px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;font-family:inherit;font-size:10px;font-weight:800;cursor:pointer">✨ AI Fill</button>'
+    +'</div>'
+    // Text tab
+    +'<div id="tpanel-text-'+t.id+'">'
+    +'<textarea class="fi" id="tc'+t.id+'" placeholder="Writing prompt / reading text / instructions. For quiz questions use the Quiz tab." style="min-height:80px">'+esc(t.activity_content||t.content||'')+'</textarea>'
+    +'</div>'
+    // Images tab
+    +'<div id="tpanel-images-'+t.id+'" style="display:none">'
+    +'<div style="background:#f8faff;border:2px dashed #c7d2fe;border-radius:10px;padding:12px;text-align:center;cursor:pointer;position:relative" onclick="document.getElementById(\'imgup-'+t.id+'\').click()">'
+    +'<div style="font-size:24px;margin-bottom:4px">📁</div>'
+    +'<div style="font-size:12px;font-weight:700;color:#4f46e5">Click to upload images or PDFs</div>'
+    +'<div style="font-size:10px;color:#94a3b8;margin-top:2px">Multiple files supported — they appear in order for Tom</div>'
+    +'<input type="file" id="imgup-'+t.id+'" accept="image/*,.pdf" multiple style="display:none" onchange="handleImageUpload(event,'+t.id+')">'
+    +'</div>'
+    // Paste area
+    +'<div style="margin-top:6px;font-size:10px;color:#94a3b8;padding:4px 0">📋 Tip: click the upload button above, or use the AI Fill tab to generate content automatically</div>'
+    +'<div id="img-thumbs-'+t.id+'" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>'
+    +'</div>'
+    // Quiz builder tab
+    +'<div id="tpanel-quiz-'+t.id+'" style="display:none">'
+    +'<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">Build quiz questions — each becomes a multiple choice question for Tom:</div>'
+    +'<div id="quiz-qs-'+t.id+'"></div>'
+    +'<button onclick="addQuizQ('+t.id+')" style="width:100%;padding:7px;border-radius:8px;border:1.5px dashed #c7d2fe;background:#f8faff;color:#4f46e5;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">+ Add question</button>'
+    +'<button onclick="quizToContent('+t.id+')" style="width:100%;padding:7px;border-radius:8px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px">✓ Apply quiz to task</button>'
+    +'</div>'
+    // AI fill tab
+    +'<div id="tpanel-ai-'+t.id+'" style="display:none">'
+    +'<textarea id="ai-fill-prompt-'+t.id+'" class="fi" placeholder="Describe what to generate, e.g: 5 science questions about volcanoes for a gifted 10-year-old" style="min-height:60px;margin-bottom:6px"></textarea>'
+    +'<button onclick="aiAutoFill('+t.id+')" style="width:100%;padding:8px;border-radius:9px;border:none;background:#8b5cf6;color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer">✨ Generate & fill content</button>'
+    +'<div id="ai-fill-status-'+t.id+'" style="font-size:11px;font-weight:700;min-height:16px;margin-top:4px;color:#64748b"></div>'
+    +'</div>'
+    +'</div>'
+    +'</div>'
     +'<div class="fr"><div class="fl">Min words</div><input class="fi num" type="number" id="tw'+t.id+'" value="'+(t.min_words||50)+'" min="10" max="500"></div>'
     +'<div class="fr" style="align-items:flex-start"><div class="fl">Unlocks</div><div><div style="display:flex;flex-wrap:wrap;gap:5px" id="tg'+t.id+'">'+gc+'</div><div style="font-size:10px;color:#94a3b8;margin-top:4px">Completing ALL tasks unlocks everything.</div></div></div>'
     +'<div style="display:flex;gap:7px;margin-top:8px"><button class="btn bp sm" onclick="save('+t.id+')" style="flex:1">💾 Save</button><button class="btn sm" style="background:'+(t.done?'#dcfce7':'#f1f5f9')+';color:'+(t.done?'#16a34a':'#64748b')+'" onclick="tog('+t.id+')">'+(t.done?'✓ Done':'Mark done')+'</button></div>';
@@ -327,6 +366,210 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2500);}
 function setSt(ok,msg){document.getElementById('sdot').className='dot '+(ok?'dok':'derr');document.getElementById('stxt').textContent=ok?'Connected':'Error: '+msg;document.getElementById('stm').textContent=ok?new Date().toLocaleTimeString():'';}
+
+// ── TASK CONTENT TABS ─────────────────────────────────────
+function setTaskTab(taskId, tab) {
+  ['text','images','quiz','ai'].forEach(t => {
+    const panel = document.getElementById('tpanel-'+t+'-'+taskId);
+    const btn   = document.getElementById('ttab-'+t+'-'+taskId);
+    if (!panel || !btn) return;
+    const active = t === tab;
+    panel.style.display = active ? 'block' : 'none';
+    btn.style.background  = active ? '#eef2ff' : '#f8fafc';
+    btn.style.borderColor = active ? '#4f46e5' : '#e2e8f0';
+    btn.style.color       = active ? '#4f46e5' : '#64748b';
+  });
+}
+
+// ── IMAGE UPLOAD & PASTE ──────────────────────────────────
+// taskImages: { [taskId]: [{name, data}] }
+const taskImages = {};
+
+function handleImageUpload(event, taskId) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  if (!taskImages[taskId]) taskImages[taskId] = [];
+  let done = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      taskImages[taskId].push({ name: file.name, data: e.target.result });
+      done++;
+      if (done === files.length) {
+        renderTaskImages(taskId);
+        toast(files.length + ' file' + (files.length>1?'s':'') + ' added!');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function handlePaste(event, taskId) {
+  const items = Array.from(event.clipboardData?.items || []);
+  const imgItem = items.find(i => i.type.startsWith('image/'));
+  if (!imgItem) return;
+  event.preventDefault();
+  const blob = imgItem.getAsFile();
+  const reader = new FileReader();
+  reader.onload = e => {
+    if (!taskImages[taskId]) taskImages[taskId] = [];
+    taskImages[taskId].push({ name: 'pasted-image.png', data: e.target.result });
+    renderTaskImages(taskId);
+    toast('Image pasted!');
+  };
+  reader.readAsDataURL(blob);
+}
+
+function renderTaskImages(taskId) {
+  const c = document.getElementById('img-thumbs-'+taskId);
+  if (!c) return;
+  const imgs = taskImages[taskId] || [];
+  c.innerHTML = '';
+  imgs.forEach((img, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;display:inline-block';
+    const el = document.createElement('img');
+    el.src = img.data;
+    el.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #e2e8f0;cursor:pointer';
+    el.onclick = () => { const w=window.open(); w.document.write('<img src="'+img.data+'" style="max-width:100%">'); };
+    const del = document.createElement('button');
+    del.textContent = '✕';
+    del.style.cssText = 'position:absolute;top:-6px;right:-6px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:800;cursor:pointer';
+    del.onclick = () => { taskImages[taskId].splice(i,1); renderTaskImages(taskId); };
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-size:9px;color:#94a3b8;text-align:center;max-width:80px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis';
+    lbl.textContent = img.name;
+    wrap.appendChild(el); wrap.appendChild(del); wrap.appendChild(lbl);
+    c.appendChild(wrap);
+  });
+  if (imgs.length) {
+    const note = document.createElement('div');
+    note.style.cssText = 'width:100%;font-size:10px;color:#94a3b8;margin-top:2px';
+    note.textContent = imgs.length + ' image' + (imgs.length>1?'s':'') + ' attached — these will show in Tom\'s writing screen';
+    c.appendChild(note);
+  }
+}
+
+// ── QUIZ BUILDER ──────────────────────────────────────────
+const quizData = {}; // { [taskId]: [{q, correct, opts:[]}] }
+
+function addQuizQ(taskId) {
+  if (!quizData[taskId]) quizData[taskId] = [];
+  quizData[taskId].push({ q:'', correct:'', opts:['','',''] });
+  renderQuizBuilder(taskId);
+}
+
+function renderQuizBuilder(taskId) {
+  const c = document.getElementById('quiz-qs-'+taskId);
+  if (!c) return;
+  const qs = quizData[taskId] || [];
+  c.innerHTML = '';
+  qs.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'background:#f8fafc;border-radius:10px;padding:10px;margin-bottom:8px;border:1.5px solid #e2e8f0';
+    div.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:6px">'
+      + '<span style="font-size:11px;font-weight:800;color:#4f46e5">Question '+(qi+1)+'</span>'
+      + '<button onclick="removeQuizQ('+taskId+','+qi+')" style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;cursor:pointer">✕ Remove</button>'
+      + '</div>'
+      + '<input id="qq-'+taskId+'-'+qi+'" value="'+esc(q.q)+'" placeholder="Question text…" style="width:100%;padding:7px 9px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;margin-bottom:6px;outline:none" oninput="quizData['+taskId+']['+qi+'].q=this.value">'
+      + '<div style="font-size:10px;font-weight:700;color:#16a34a;margin-bottom:4px">✓ Correct answer</div>'
+      + '<input id="qc-'+taskId+'-'+qi+'" value="'+esc(q.correct)+'" placeholder="Correct answer…" style="width:100%;padding:7px 9px;border-radius:8px;border:1.5px solid #22c55e;font-family:inherit;font-size:12px;margin-bottom:6px;outline:none" oninput="quizData['+taskId+']['+qi+'].correct=this.value">'
+      + '<div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:4px">Wrong options (2-3)</div>'
+      + q.opts.map((o,oi) => '<input value="'+esc(o)+'" placeholder="Wrong option '+(oi+1)+'…" style="width:100%;padding:6px 9px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;margin-bottom:4px;outline:none" oninput="quizData['+taskId+']['+qi+'].opts['+oi+']=this.value">').join('');
+    c.appendChild(div);
+  });
+  if (!qs.length) {
+    c.innerHTML = '<p style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">No questions yet — click + Add question</p>';
+  }
+}
+
+function removeQuizQ(taskId, qi) {
+  if (quizData[taskId]) quizData[taskId].splice(qi, 1);
+  renderQuizBuilder(taskId);
+}
+
+function quizToContent(taskId) {
+  const qs = quizData[taskId] || [];
+  if (!qs.length) { toast('Add at least one question first!'); return; }
+  const lines = qs.filter(q=>q.q&&q.correct).map(q => {
+    const opts = [q.correct, ...q.opts.filter(Boolean)];
+    return q.q + '|' + opts.join('|');
+  });
+  const tc = document.getElementById('tc'+taskId);
+  if (tc) tc.value = lines.join('\n');
+  // Also switch to text tab to show the result
+  setTaskTab(taskId, 'text');
+  toast('Quiz applied! ' + lines.length + ' question' + (lines.length>1?'s':'') + ' ready ✓');
+}
+
+// ── AI AUTO-FILL ──────────────────────────────────────────
+async function aiAutoFill(taskId) {
+  const promptEl = document.getElementById('ai-fill-prompt-'+taskId);
+  const statusEl = document.getElementById('ai-fill-status-'+taskId);
+  const t = tasks.find(x => x.id === taskId);
+  if (!promptEl || !promptEl.value.trim()) { toast('Enter a description first!'); return; }
+  statusEl.textContent = '⏳ Generating…'; statusEl.style.color = '#8b5cf6';
+  const subj = document.getElementById('ts'+taskId)?.value || (t?t.subject:'General');
+  try {
+    const sys = 'Generate task content for a gifted 10-11 year old student. Return ONLY the plain content lines, no JSON, no markdown. For quiz/science/history/geography: one question per line as: Question text|Correct answer|Wrong option 1|Wrong option 2|Wrong option 3. For writing: return just the prompt paragraph. For spelling: word|memory hint, one per line.';
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, system: sys,
+        messages: [{ role: 'user', content: 'Subject: ' + subj + '. Request: ' + promptEl.value.trim() }] })
+    });
+    if (!resp.ok) throw new Error('API error ' + resp.status);
+    const data = await resp.json();
+    const text = (data.content?.[0]?.text || '').replace(/```[^\n]*\n?/g, '').trim();
+    const tc = document.getElementById('tc'+taskId);
+    if (tc) tc.value = text;
+    setTaskTab(taskId, 'text');
+    statusEl.textContent = '✓ Content filled!'; statusEl.style.color = '#16a34a';
+    toast('Content generated and filled ✓');
+  } catch(e) {
+    statusEl.textContent = 'Error: ' + e.message; statusEl.style.color = '#dc2626';
+  }
+}
+
+// ── PATCH saveTask to include images ─────────────────────
+const _origSave = save;
+async function saveWithImages(id) {
+  // If there are images, encode them into activity_content as JSON
+  const imgs = taskImages[id];
+  if (imgs && imgs.length > 0) {
+    const tc = document.getElementById('tc'+id);
+    const textContent = tc ? tc.value : '';
+    const combined = JSON.stringify({ text: textContent, images: imgs });
+    if (tc) tc.value = combined;
+    await save(id);
+    if (tc) tc.value = textContent; // restore display
+  } else {
+    await save(id);
+  }
+}
+
+
+// ── GLOBAL PASTE HANDLER FOR IMAGES TAB ──────────────────
+document.addEventListener('paste', function(e) {
+  // Only activate if images tab is open for a task
+  const activeImgPanel = document.querySelector('[id^="tpanel-images-"][style*="display: block"], [id^="tpanel-images-"]:not([style*="none"])');
+  if (!activeImgPanel) return;
+  const taskId = parseInt(activeImgPanel.id.replace('tpanel-images-',''));
+  if (!taskId) return;
+  const items = Array.from(e.clipboardData?.items || []);
+  const imgItem = items.find(i => i.type.startsWith('image/'));
+  if (!imgItem) return;
+  e.preventDefault();
+  const reader = new FileReader();
+  reader.onload = ev => {
+    if (!taskImages[taskId]) taskImages[taskId] = [];
+    taskImages[taskId].push({ name: 'pasted-image.png', data: ev.target.result });
+    renderTaskImages(taskId);
+    toast('Image pasted! ✓');
+  };
+  reader.readAsDataURL(imgItem.getAsFile());
+});
+
 </script>
 </body>
 </html>
