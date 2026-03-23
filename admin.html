@@ -5,193 +5,188 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tom's Quest — Teacher Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Nunito',sans-serif;background:#f0f4ff;color:#1a1a2e;min-height:100vh;}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:#f0f4ff;color:#1a1a2e;min-height:100vh;}
 .hdr{background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:16px 20px;color:#fff;}
 .hdr h1{font-size:18px;font-weight:900;}
 .hdr p{font-size:12px;opacity:.8;margin-top:2px;}
-.container{max-width:700px;margin:0 auto;padding:16px;}
+.wrap{max-width:700px;margin:0 auto;padding:16px;}
 .card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;border:1.5px solid #e5e7eb;}
-.card-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:12px;}
-.pin-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;gap:12px;}
-.pin-screen h2{font-size:20px;font-weight:900;}
-.pin-input{font-size:28px;font-weight:900;letter-spacing:8px;text-align:center;width:160px;padding:12px;border-radius:12px;border:2.5px solid #e5e7eb;font-family:'Nunito',sans-serif;outline:none;}
-.pin-input:focus{border-color:#4f46e5;}
-.btn{padding:11px 22px;border-radius:11px;border:none;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:transform .1s;}
-.btn:active{transform:scale(.97);}
+.card-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:12px;}
+.btn{padding:9px 18px;border-radius:10px;border:none;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;}
 .btn-p{background:#4f46e5;color:#fff;}
-.btn-g{background:#f3f4f6;color:#6b7280;}
 .btn-r{background:#fee2e2;color:#dc2626;}
-.btn-sm{padding:7px 13px;font-size:12px;}
+.btn-g{background:#f3f4f6;color:#6b7280;}
+.btn-sm{padding:6px 12px;font-size:12px;}
 .day-tabs{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap;}
-.day-tab{padding:7px 14px;border-radius:9px;border:2px solid #e5e7eb;background:#fff;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;color:#6b7280;transition:all .15s;}
+.day-tab{padding:7px 14px;border-radius:9px;border:2px solid #e5e7eb;background:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;color:#6b7280;}
 .day-tab.active{background:#4f46e5;color:#fff;border-color:#4f46e5;}
 .task-row{border:1.5px solid #e5e7eb;border-radius:11px;padding:13px;margin-bottom:10px;}
 .field-row{display:flex;gap:6px;align-items:flex-start;margin-bottom:7px;}
-.field-label{font-size:11px;font-weight:700;color:#6b7280;min-width:80px;padding-top:7px;}
-.field-input{flex:1;padding:7px 10px;border-radius:9px;border:1.5px solid #e5e7eb;font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;color:#1a1a2e;outline:none;}
+.field-label{font-size:11px;font-weight:700;color:#6b7280;min-width:72px;padding-top:8px;}
+.field-input{flex:1;padding:7px 10px;border-radius:9px;border:1.5px solid #e5e7eb;font-family:inherit;font-size:12px;font-weight:600;color:#1a1a2e;outline:none;}
 .field-input:focus{border-color:#4f46e5;}
 textarea.field-input{resize:vertical;min-height:70px;line-height:1.5;}
-select.field-input{background:#fff;}
-.xp-input{width:65px;text-align:center;font-weight:700;}
+.num-input{width:65px;text-align:center;font-weight:700;}
 .task-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-.subject-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:7px;}
-.delete-btn{margin-left:auto;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;padding:4px 10px;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;cursor:pointer;}
+.subj-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:7px;background:#eef2ff;color:#4f46e5;}
+.del-btn{margin-left:auto;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;padding:4px 10px;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;}
 .mood-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;}
-.mood-row:last-child{border-bottom:none;}
-.writing-review{background:#f8fafc;border-radius:9px;padding:10px 12px;margin-bottom:8px;border:1px solid #e5e7eb;}
+.writing-box{background:#f8fafc;border-radius:9px;padding:10px 12px;margin-bottom:8px;border:1px solid #e5e7eb;}
 .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.status-ok{background:#22c55e;}
-.status-alert{background:#ef4444;animation:pulse 1s infinite;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
-.loading{text-align:center;padding:30px;color:#9ca3af;font-weight:700;}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(100px);background:#1a1a2e;color:#fff;padding:9px 20px;border-radius:26px;font-size:13px;font-weight:700;z-index:300;transition:transform .3s;pointer-events:none;}
+.dot-ok{background:#22c55e;}
+.dot-err{background:#ef4444;}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(100px);background:#1a1a2e;color:#fff;padding:9px 20px;border-radius:26px;font-size:13px;font-weight:700;z-index:300;transition:transform .3s;}
 .toast.show{transform:translateX(-50%) translateY(0);}
-.supabase-setup{background:#fef3c7;border-radius:11px;padding:14px;margin-bottom:14px;border:2px solid #fbbf24;}
-.supabase-setup p{font-size:13px;font-weight:700;color:#92400e;margin-bottom:8px;}
-.supabase-setup input{width:100%;padding:9px;border-radius:9px;border:1.5px solid #fbbf24;font-family:'Nunito',sans-serif;font-size:12px;margin-bottom:6px;outline:none;}
+.add-row{background:#f5f3ff;border-radius:11px;border:2px dashed #c7d2fe;padding:10px;margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+select.field-input{background:#fff;}
+#loading{display:flex;position:fixed;inset:0;background:#f0f4ff;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:999;}
+#pin-wrap{display:none;position:fixed;inset:0;background:#f0f4ff;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:998;}
+#main-wrap{display:none;}
+.pin-input{font-size:28px;font-weight:900;letter-spacing:8px;text-align:center;width:160px;padding:12px;border-radius:12px;border:2.5px solid #e5e7eb;font-family:inherit;outline:none;}
+.pin-input:focus{border-color:#4f46e5;}
 </style>
 </head>
 <body>
 
-<div id="setup-screen" style="display:none">
-  <div class="container" style="max-width:500px;padding-top:40px">
-    <div style="text-align:center;margin-bottom:20px">
-      <div style="font-size:36px">⚙️</div>
-      <h2 style="font-size:20px;font-weight:900;margin-top:8px">Connect to Supabase</h2>
-      <p style="font-size:13px;color:#6b7280;font-weight:600;margin-top:4px">Enter your Supabase project details once to get started</p>
-    </div>
-    <div class="supabase-setup">
-      <p>📋 Find these in your Supabase Dashboard → Project Settings → API</p>
-      <label style="font-size:11px;font-weight:700;color:#92400e">Project URL</label>
-      <input id="setup-url" type="text" placeholder="https://xxxxxxxxxxxx.supabase.co">
-      <label style="font-size:11px;font-weight:700;color:#92400e">Anon/Public Key</label>
-      <input id="setup-key" type="text" placeholder="eyJhbGciOi...">
-    </div>
-    <button class="btn btn-p" style="width:100%;padding:13px" onclick="saveSupabaseConfig()">Connect →</button>
-    <p style="font-size:11px;color:#9ca3af;font-weight:600;text-align:center;margin-top:10px">These are saved in your browser only</p>
-  </div>
+<!-- Loading screen -->
+<div id="loading">
+  <div style="font-size:40px">⚙️</div>
+  <div style="font-size:16px;font-weight:800;color:#4f46e5">Connecting to database…</div>
+  <div id="load-err" style="font-size:13px;color:#dc2626;font-weight:700;max-width:300px;text-align:center;display:none"></div>
 </div>
 
-<div id="pin-screen" style="display:none">
-  <div class="pin-screen">
-    <div style="font-size:40px">🔒</div>
-    <h2>Teacher Admin</h2>
-    <p style="font-size:13px;color:#6b7280;font-weight:600">Enter your PIN to continue</p>
+<!-- PIN screen -->
+<div id="pin-wrap" style="display:none">
+  <div style="text-align:center">
+    <div style="font-size:40px;margin-bottom:10px">🔒</div>
+    <h2 style="font-size:20px;font-weight:900;margin-bottom:6px">Teacher Admin</h2>
+    <p style="font-size:13px;color:#6b7280;font-weight:600;margin-bottom:16px">Enter your PIN</p>
     <input id="pin-input" type="password" maxlength="4" class="pin-input" placeholder="••••"
       oninput="if(this.value.length===4)checkPin()">
-    <div id="pin-err" style="color:#dc2626;font-size:12px;font-weight:700;min-height:18px"></div>
+    <div id="pin-err" style="color:#dc2626;font-size:12px;font-weight:700;min-height:18px;margin-top:8px"></div>
   </div>
 </div>
 
-<div id="admin-screen" style="display:none">
+<!-- Main admin -->
+<div id="main-wrap" style="display:none">
   <div class="hdr">
     <h1>⚙️ Tom's Quest — Teacher Admin</h1>
-    <p>Remote control panel · Changes sync to Tom's screen instantly</p>
+    <p>Changes sync to Tom's screen within 10 seconds</p>
   </div>
+  <div class="wrap">
 
-  <div class="container">
-    <!-- Status bar -->
+    <!-- Status -->
     <div class="card" style="display:flex;align-items:center;gap:10px">
-      <div class="status-dot" id="status-dot"></div>
+      <div class="status-dot dot-ok" id="status-dot"></div>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:800" id="status-text">Connecting…</div>
-        <div style="font-size:11px;color:#6b7280;font-weight:600" id="status-sub"></div>
+        <div style="font-size:13px;font-weight:800" id="status-text">Connected</div>
+        <div style="font-size:11px;color:#6b7280;font-weight:600" id="status-sub">Supabase real-time</div>
       </div>
-      <button class="btn btn-sm btn-g" onclick="loadAll()">🔄 Refresh</button>
+      <button class="btn btn-g btn-sm" onclick="loadAll()">🔄 Refresh</button>
     </div>
 
-    <!-- XP control -->
+    <!-- XP -->
     <div class="card">
-      <div class="card-title">Tom's XP & Progress</div>
+      <div class="card-title">Tom's XP</div>
       <div class="field-row">
         <div class="field-label">XP total</div>
-        <input class="field-input xp-input" type="number" id="xp-input" min="0" max="9999" value="0">
-        <button class="btn btn-sm btn-p" onclick="saveXP()" style="flex-shrink:0">Save XP</button>
+        <input class="field-input num-input" type="number" id="xp-input" min="0" max="9999" value="0">
+        <button class="btn btn-p btn-sm" onclick="saveXP()">Save XP</button>
       </div>
     </div>
 
-    <!-- Tasks by day -->
+    <!-- Tasks -->
     <div class="card">
       <div class="card-title">📋 Tasks</div>
       <div class="day-tabs" id="day-tabs"></div>
-      <div id="tasks-container" class="loading">Loading tasks…</div>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn btn-p btn-sm" onclick="addTask()" style="flex:1">+ Add task</button>
-        <button class="btn btn-r btn-sm" onclick="resetDayProgress()">🔄 Reset day progress</button>
+      <div id="tasks-area" style="color:#9ca3af;font-size:13px;font-weight:600;padding:8px 0">Loading…</div>
+      <div class="add-row">
+        <select id="new-subj" class="field-input" style="max-width:130px;flex-shrink:0">
+          <option>Reading</option><option>Maths</option><option>Writing</option>
+          <option>Spelling</option><option>Video</option><option>Science</option>
+          <option>History</option><option>Geography</option><option>Worksheet</option>
+          <option>Slides</option><option>Other</option>
+        </select>
+        <input id="new-name" class="field-input" placeholder="Task name…" style="flex:1;min-width:100px"
+          onkeydown="if(event.key==='Enter')addTask()">
+        <button class="btn btn-p btn-sm" onclick="addTask()">Add ✓</button>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn btn-r btn-sm" onclick="resetDay()">🔄 Reset day progress</button>
       </div>
     </div>
 
     <!-- Mood log -->
     <div class="card">
       <div class="card-title">💭 Mood log — today</div>
-      <div id="mood-log-container" class="loading">Loading…</div>
+      <div id="mood-area" style="color:#9ca3af;font-size:13px;font-weight:600">Loading…</div>
     </div>
 
-    <!-- Writing reviews -->
+    <!-- Writing -->
     <div class="card">
       <div class="card-title">✏️ Tom's submitted writing</div>
-      <div id="writing-container" class="loading">Loading…</div>
+      <div id="writing-area" style="color:#9ca3af;font-size:13px;font-weight:600">Loading…</div>
     </div>
+
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const ADMIN_PIN = '2026';
+const PIN = '2026';
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-const SUBJECTS = ['Reading','Maths','Writing','Video','Spelling','Worksheet','Slides','Other'];
-const SUBJECT_COLORS = {Reading:'#ede9fe',Maths:'#e0f2fe',Writing:'#d1fae5',Video:'#fef3c7',Spelling:'#fce7f3',Worksheet:'#f3e8ff',Slides:'#fee2e2',Other:'#f3f4f6'};
-const SUBJECT_TEXT = {Reading:'#7c3aed',Maths:'#0369a1',Writing:'#065f46',Video:'#b45309',Spelling:'#be185d',Worksheet:'#6b21a8',Slides:'#dc2626',Other:'#6b7280'};
+const SUBJS = ['Reading','Maths','Writing','Spelling','Video','Science','History','Geography','Worksheet','Slides','Other'];
+const XP_DEF = {Reading:30,Maths:25,Writing:35,Spelling:25,Video:20,Science:25,History:25,Geography:25,Worksheet:30,Slides:20,Other:20};
+const META_DEF = {Reading:'15 min read',Maths:'10 questions',Writing:'5 sentences',Spelling:'8 words',Video:'Watch & answer',Science:'10 questions',History:'10 questions',Geography:'10 questions',Worksheet:'Complete worksheet',Slides:'View slides',Other:'Complete task'};
 
-let supabase = null;
-let currentDay = 0;
+let db = null;
+let day = 0;
 let tasks = [];
-let nextTempId = 1000;
 
-// ── SETUP ────────────────────────────────────────────────
-function getSupabaseConfig() {
-  return {
-    url: localStorage.getItem('sb_url') || '',
-    key: localStorage.getItem('sb_key') || '',
-  };
-}
-
-function saveSupabaseConfig() {
-  const url = document.getElementById('setup-url').value.trim();
-  const key = document.getElementById('setup-key').value.trim();
-  if (!url || !key) { alert('Please enter both fields'); return; }
-  localStorage.setItem('sb_url', url);
-  localStorage.setItem('sb_key', key);
-  initSupabase(url, key);
-}
-
-async function initSupabase(url, key) {
+// ── INIT ─────────────────────────────────────────────────
+window.addEventListener('load', async function() {
   try {
-    let i = 0;
-    while ((!window.supabase || !window.supabase.createClient) && i < 40) {
-      await new Promise(r => setTimeout(r, 100)); i++;
+    // Wait for Supabase CDN library
+    let tries = 0;
+    while (tries < 50) {
+      if (window.supabase && window.supabase.createClient) break;
+      await sleep(100);
+      tries++;
     }
-    if (!window.supabase || !window.supabase.createClient) throw new Error('Library not loaded');
-    supabase = window.supabase.createClient(url, key);
-    const { error } = await supabase.from('quest_state').select('id').limit(1);
+    if (!window.supabase || !window.supabase.createClient) throw new Error('Supabase library failed to load — check internet connection');
+
+    db = window.supabase.createClient(
+      'https://qfjwwoxmnatfagqjkgpv.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmand3b3htbmF0ZmFncWprZ3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMzcyNTgsImV4cCI6MjA4OTgxMzI1OH0.4pGQPBwk9Off59LHHcPKzrSSDwINJcTv0EpGkbjH5Hc'
+    );
+
+    // Test connection
+    const { error } = await db.from('quest_state').select('id').limit(1);
     if (error) throw new Error(error.message);
-    document.getElementById('setup-screen').style.display = 'none';
-    document.getElementById('pin-screen').style.display = 'block';
+
+    // Connected — show PIN screen
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('pin-wrap').style.display = 'flex';
+    document.getElementById('pin-input').focus();
+
   } catch(e) {
-    alert('Connection failed: ' + e.message);
+    document.getElementById('load-err').textContent = 'Error: ' + e.message;
+    document.getElementById('load-err').style.display = 'block';
+    document.querySelector('#loading div:nth-child(2)').textContent = 'Could not connect';
   }
-}
+});
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── PIN ──────────────────────────────────────────────────
 function checkPin() {
   const val = document.getElementById('pin-input').value;
-  if (val === ADMIN_PIN) {
-    document.getElementById('pin-screen').style.display = 'none';
-    document.getElementById('admin-screen').style.display = 'block';
+  if (val === PIN) {
+    document.getElementById('pin-wrap').style.display = 'none';
+    document.getElementById('main-wrap').style.display = 'block';
     loadAll();
   } else {
     document.getElementById('pin-err').textContent = 'Wrong PIN';
@@ -202,234 +197,230 @@ function checkPin() {
 
 // ── LOAD DATA ─────────────────────────────────────────────
 async function loadAll() {
-  setStatus('Syncing…', '', false);
   try {
-    await Promise.all([loadState(), loadTasks(), loadMoodLog()]);
-    setStatus('Connected — changes sync instantly', 'Supabase real-time', true);
+    await Promise.all([loadState(), loadTasks(), loadMoods()]);
+    setStatus(true, 'Connected', 'Last refreshed: ' + new Date().toLocaleTimeString());
   } catch(e) {
-    setStatus('Connection error', e.message, false);
+    setStatus(false, 'Error loading data', e.message);
   }
 }
 
 async function loadState() {
-  const { data, error } = await supabase.from('quest_state').select('*').eq('id','tom').single();
-  if (error) throw error;
-  document.getElementById('xp-input').value = data.xp || 0;
+  const { data } = await db.from('quest_state').select('*').eq('id','tom').single();
+  if (data) document.getElementById('xp-input').value = data.xp || 0;
 }
 
 async function loadTasks() {
-  const { data, error } = await supabase.from('tasks').select('*').eq('student_id','tom').order('id');
+  const { data, error } = await db.from('tasks').select('*').eq('student_id','tom').order('id');
   if (error) throw error;
   tasks = data || [];
   renderDayTabs();
   renderTasks();
-  renderWritingReviews();
+  renderWriting();
 }
 
-async function loadMoodLog() {
+async function loadMoods() {
   const today = new Date().toISOString().split('T')[0];
-  const { data, error } = await supabase.from('mood_log').select('*')
-    .eq('student_id','tom').gte('logged_at', today).order('logged_at');
-  if (error) throw error;
-  renderMoodLog(data || []);
+  const { data } = await db.from('mood_log').select('*').eq('student_id','tom').gte('logged_at', today).order('logged_at');
+  renderMoods(data || []);
 }
 
 // ── RENDER ────────────────────────────────────────────────
 function renderDayTabs() {
-  const c = document.getElementById('day-tabs'); c.innerHTML = '';
+  const c = document.getElementById('day-tabs');
+  c.innerHTML = '';
   DAYS.forEach((d, i) => {
     const b = document.createElement('button');
-    b.className = 'day-tab' + (i === currentDay ? ' active' : '');
+    b.className = 'day-tab' + (i === day ? ' active' : '');
     b.textContent = d;
-    b.onclick = () => { currentDay = i; renderDayTabs(); renderTasks(); };
+    b.onclick = () => { flushFields(); day = i; renderDayTabs(); renderTasks(); };
     c.appendChild(b);
   });
 }
 
 function renderTasks() {
-  const c = document.getElementById('tasks-container');
-  const dayTasks = tasks.filter(t => t.day_index === currentDay);
+  const c = document.getElementById('tasks-area');
+  const dayTasks = tasks.filter(t => t.day_index === day);
   if (!dayTasks.length) {
-    c.innerHTML = '<div style="color:#9ca3af;font-size:13px;font-weight:600;padding:8px 0">No tasks for this day. Click + Add task.</div>';
+    c.innerHTML = '<div style="color:#9ca3af;font-size:13px;font-weight:600;padding:8px 0">No tasks for this day. Add one below.</div>';
     return;
   }
   c.innerHTML = '';
   dayTasks.forEach(t => {
-    const bg = SUBJECT_COLORS[t.subject] || '#f3f4f6';
-    const tx = SUBJECT_TEXT[t.subject] || '#6b7280';
     const pct = t.steps > 0 ? Math.round((t.progress / t.steps) * 100) : 0;
     const div = document.createElement('div');
     div.className = 'task-row';
     div.innerHTML = `
       <div class="task-header">
-        <span class="subject-badge" style="background:${bg};color:${tx}">${t.subject}</span>
-        <span style="font-size:12px;font-weight:700;color:#6b7280">${pct}% complete ${t.done ? '✓' : ''}</span>
-        <button class="delete-btn" onclick="deleteTask(${t.id})">✕ Delete</button>
+        <span class="subj-badge">${t.subject}</span>
+        <span style="font-size:12px;font-weight:700;color:#6b7280">${pct}% done ${t.done?'✓':''}</span>
+        <button class="del-btn" onclick="delTask(${t.id})">✕ Delete</button>
       </div>
-      <div class="field-row"><div class="field-label">Title</div><input class="field-input" id="t-name-${t.id}" value="${esc(t.name)}"></div>
-      <div class="field-row"><div class="field-label">Details</div><input class="field-input" id="t-meta-${t.id}" value="${esc(t.meta)}"></div>
+      <div class="field-row"><div class="field-label">Title</div><input class="field-input" id="an-${t.id}" value="${esc(t.name)}"></div>
+      <div class="field-row"><div class="field-label">Details</div><input class="field-input" id="am-${t.id}" value="${esc(t.meta)}"></div>
       <div class="field-row">
         <div class="field-label">Subject</div>
-        <select class="field-input" id="t-subj-${t.id}" style="max-width:130px">
-          ${SUBJECTS.map(s => `<option value="${s}"${s===t.subject?' selected':''}>${s}</option>`).join('')}
+        <select class="field-input" id="as-${t.id}" style="max-width:130px">
+          ${SUBJS.map(s=>`<option value="${s}"${s===t.subject?' selected':''}>${s}</option>`).join('')}
         </select>
-        <input class="field-input xp-input" type="number" id="t-xp-${t.id}" value="${t.xp}" min="5" max="200" title="XP reward">
-        <input class="field-input xp-input" type="number" id="t-steps-${t.id}" value="${t.steps}" min="1" max="20" title="Steps">
+        <input class="field-input num-input" type="number" id="ax-${t.id}" value="${t.xp}" min="5" max="200" title="XP">
+        <input class="field-input num-input" type="number" id="ast-${t.id}" value="${t.steps}" min="1" max="20" title="Steps">
       </div>
-      <div class="field-row">
-        <div class="field-label">Gate session</div>
-        <select class="field-input" id="t-gate-${t.id}" style="max-width:180px">
-          <option value="">— No gate —</option>
-          <option value="morning"${t.gate_session==='morning'?' selected':''}>Morning (9am)</option>
-          <option value="recess"${t.gate_session==='recess'?' selected':''}>Recess (11:20am)</option>
-          <option value="lunch"${t.gate_session==='lunch'?' selected':''}>Lunch (2pm)</option>
-        </select>
-      </div>
-      <div class="field-row">
-        <div class="field-label">Link / URL</div>
-        <input class="field-input" id="t-link-${t.id}" placeholder="YouTube / Google Slides URL…" value="${esc(t.link||'')}">
-      </div>
+      <div class="field-row"><div class="field-label">Link/URL</div><input class="field-input" id="al-${t.id}" value="${esc(t.link||'')}" placeholder="YouTube / Slides URL…"></div>
       <div class="field-row" style="align-items:flex-start">
         <div class="field-label">Content</div>
-        <textarea class="field-input" id="t-content-${t.id}" placeholder="Reading text / Maths questions (question|answer) / Writing prompt / Spelling words (word|hint)">${esc(t.activity_content||'')}</textarea>
+        <textarea class="field-input" id="ac-${t.id}" placeholder="Reading text / questions / writing prompt…">${esc(t.activity_content||'')}</textarea>
       </div>
       <div class="field-row">
-        <div class="field-label">Min words</div>
-        <input class="field-input xp-input" type="number" id="t-minw-${t.id}" value="${t.min_words||30}" min="5" max="500" title="Min words (writing)">
-        <span style="font-size:10px;color:#9ca3af;font-weight:600;padding-top:9px">(writing tasks only)</span>
+        <div class="field-label">Gate</div>
+        <select class="field-input" id="ag-${t.id}" style="max-width:180px">
+          <option value="">— No gate —</option>
+          <option value="morning"${t.gate_session==='morning'?' selected':''}>Morning</option>
+          <option value="recess"${t.gate_session==='recess'?' selected':''}>Recess</option>
+          <option value="lunch"${t.gate_session==='lunch'?' selected':''}>Lunch</option>
+        </select>
       </div>
-      <div style="display:flex;gap:7px;margin-top:6px">
+      <div style="display:flex;gap:7px;margin-top:8px">
         <button class="btn btn-p btn-sm" onclick="saveTask(${t.id})" style="flex:1">💾 Save task</button>
-        <button class="btn btn-sm" style="background:${t.done?'#dcfce7':'#f3f4f6'};color:${t.done?'#16a34a':'#6b7280'}" onclick="toggleDone(${t.id})">${t.done ? '✓ Done' : 'Mark done'}</button>
+        <button class="btn btn-sm" style="background:${t.done?'#dcfce7':'#f3f4f6'};color:${t.done?'#16a34a':'#6b7280'}" onclick="toggleDone(${t.id})">${t.done?'✓ Done':'Mark done'}</button>
       </div>
     `;
     c.appendChild(div);
   });
 }
 
-function renderMoodLog(log) {
-  const c = document.getElementById('mood-log-container');
-  if (!log.length) { c.innerHTML = '<div style="color:#9ca3af;font-size:13px;font-weight:600;padding:8px 0">No check-ins recorded today yet.</div>'; return; }
+function renderMoods(log) {
+  const c = document.getElementById('mood-area');
+  if (!log.length) { c.innerHTML = '<div style="color:#9ca3af;font-size:13px;font-weight:600">No check-ins today yet.</div>'; return; }
   c.innerHTML = '';
-  log.forEach(entry => {
+  log.forEach(e => {
+    const t = new Date(e.logged_at).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
     const div = document.createElement('div');
     div.className = 'mood-row';
-    const t = new Date(entry.logged_at).toLocaleTimeString('en-AU', {hour:'2-digit',minute:'2-digit'});
-    div.innerHTML = `
-      <div style="font-size:22px">${entry.mood_emoji}</div>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:800;color:${entry.is_alert?'#dc2626':'#1a1a2e'}">${entry.mood_label} ${entry.is_alert?'⚠️':''}</div>
-        <div style="font-size:11px;color:#6b7280;font-weight:600">${t} — ${entry.time_id}</div>
-      </div>
-      <div style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:7px;background:${entry.is_alert?'#fee2e2':'#dcfce7'};color:${entry.is_alert?'#dc2626':'#16a34a'}">${entry.is_alert?'Alert':'OK'}</div>
-    `;
+    div.innerHTML = `<div style="font-size:22px">${e.mood_emoji}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:800;color:${e.is_alert?'#dc2626':'#1a1a2e'}">${e.mood_label}${e.is_alert?' ⚠️':''}</div>
+      <div style="font-size:11px;color:#6b7280;font-weight:600">${t}</div></div>
+      <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:7px;background:${e.is_alert?'#fee2e2':'#dcfce7'};color:${e.is_alert?'#dc2626':'#16a34a'}">${e.is_alert?'Alert':'OK'}</span>`;
     c.appendChild(div);
   });
 }
 
-function renderWritingReviews() {
-  const c = document.getElementById('writing-container');
+function renderWriting() {
+  const c = document.getElementById('writing-area');
   const written = tasks.filter(t => t.saved_writing);
-  if (!written.length) { c.innerHTML = '<div style="color:#9ca3af;font-size:13px;font-weight:600;padding:8px 0">No writing submitted yet.</div>'; return; }
+  if (!written.length) { c.innerHTML = '<div style="color:#9ca3af;font-size:13px;font-weight:600">No writing submitted yet.</div>'; return; }
   c.innerHTML = '';
   written.forEach(t => {
+    const words = (t.saved_writing||'').split(/\s+/).filter(w=>w).length;
     const div = document.createElement('div');
-    div.className = 'writing-review';
-    div.innerHTML = `
-      <div style="font-size:12px;font-weight:800;color:#1a1a2e;margin-bottom:2px">${t.name}</div>
-      <div style="font-size:10px;font-weight:600;color:#6b7280;margin-bottom:7px">Submitted: ${t.writing_submitted_at || 'Unknown'} · ${(t.saved_writing||'').split(/\s+/).filter(w=>w).length} words</div>
-      <div style="font-size:13px;color:#374151;line-height:1.6;white-space:pre-wrap">${esc(t.saved_writing||'')}</div>
-    `;
+    div.className = 'writing-box';
+    div.innerHTML = `<div style="font-size:12px;font-weight:800;margin-bottom:2px">${esc(t.name)}</div>
+      <div style="font-size:10px;color:#6b7280;font-weight:600;margin-bottom:7px">${t.writing_submitted_at||''} · ${words} words</div>
+      <div style="font-size:13px;line-height:1.6;white-space:pre-wrap">${esc(t.saved_writing||'')}</div>`;
     c.appendChild(div);
   });
 }
 
-// ── SAVE / EDIT ───────────────────────────────────────────
+// ── SAVE ──────────────────────────────────────────────────
+function flushFields() {
+  tasks.filter(t => t.day_index === day).forEach(t => {
+    const g = id => document.getElementById(id+'-'+t.id);
+    if(g('an')) t.name = g('an').value;
+    if(g('am')) t.meta = g('am').value;
+    if(g('as')) t.subject = g('as').value;
+    if(g('ax')) t.xp = parseInt(g('ax').value)||20;
+    if(g('ast')) t.steps = parseInt(g('ast').value)||3;
+    if(g('al')) t.link = g('al').value.trim();
+    if(g('ag')) t.gate_session = g('ag').value||'';
+    if(g('ac')) t.activity_content = g('ac').value||'';
+  });
+}
+
 async function saveXP() {
-  const xp = parseInt(document.getElementById('xp-input').value) || 0;
-  const { error } = await supabase.from('quest_state').update({ xp, updated_at: new Date() }).eq('id','tom');
-  if (error) { showToast('Error: ' + error.message); return; }
-  showToast('XP saved! Tom will see it instantly ⭐');
+  const xp = parseInt(document.getElementById('xp-input').value)||0;
+  const {error} = await db.from('quest_state').update({xp, updated_at:new Date()}).eq('id','tom');
+  if (error) { toast('Error: '+error.message); return; }
+  toast('XP saved! ⭐');
 }
 
 async function saveTask(id) {
   const g = field => { const el = document.getElementById(field+'-'+id); return el ? el.value : ''; };
   const updates = {
-    name: g('t-name'), meta: g('t-meta'), subject: g('t-subj'),
-    xp: parseInt(g('t-xp')) || 20, steps: parseInt(g('t-steps')) || 3,
-    gate_session: g('t-gate'), link: g('t-link'),
-    activity_content: g('t-content'), min_words: parseInt(g('t-minw')) || 30,
-    updated_at: new Date(),
+    name: g('an'), meta: g('am'), subject: g('as'),
+    xp: parseInt(g('ax'))||20, steps: parseInt(g('ast'))||3,
+    gate_session: g('ag'), link: g('al'),
+    activity_content: g('ac'), updated_at: new Date(),
   };
-  const { error } = await supabase.from('tasks').update(updates).eq('id', id);
-  if (error) { showToast('Error: ' + error.message); return; }
+  const {error} = await db.from('tasks').update(updates).eq('id', id);
+  if (error) { toast('Error: '+error.message); return; }
   const t = tasks.find(x => x.id === id);
   if (t) Object.assign(t, updates);
-  showToast('Task saved! ✓');
+  toast('Saved ✓');
 }
 
 async function addTask() {
-  const { data, error } = await supabase.from('tasks').insert({
-    student_id: 'tom', day_index: currentDay,
-    subject: 'Reading', name: 'New task', meta: 'Description',
-    xp: 20, steps: 3, progress: 0, done: false,
-    link: '', gate_session: '', activity_content: '', min_words: 30,
+  flushFields();
+  const subj = document.getElementById('new-subj').value;
+  const nameEl = document.getElementById('new-name');
+  const name = nameEl.value.trim() || subj + ' task';
+  const {data, error} = await db.from('tasks').insert({
+    student_id:'tom', day_index:day, subject:subj, name,
+    meta: META_DEF[subj]||'Complete task', xp: XP_DEF[subj]||20,
+    steps:3, progress:0, done:false, link:'', gate_session:'',
+    unlocks_games:'[]', activity_content:'', min_words:30,
   }).select().single();
-  if (error) { showToast('Error: ' + error.message); return; }
+  if (error) { toast('Error: '+error.message); return; }
   tasks.push(data);
+  nameEl.value = '';
   renderTasks();
-  showToast('Task added!');
+  toast(subj + ' task added!');
 }
 
-async function deleteTask(id) {
+async function delTask(id) {
   if (!confirm('Delete this task?')) return;
-  const { error } = await supabase.from('tasks').delete().eq('id', id);
-  if (error) { showToast('Error: ' + error.message); return; }
+  flushFields();
+  const {error} = await db.from('tasks').delete().eq('id', id);
+  if (error) { toast('Error: '+error.message); return; }
   tasks = tasks.filter(t => t.id !== id);
   renderTasks();
-  showToast('Task deleted');
+  toast('Deleted');
 }
 
 async function toggleDone(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
-  const newDone = !t.done;
-  const { error } = await supabase.from('tasks').update({ done: newDone, progress: newDone ? t.steps : 0, updated_at: new Date() }).eq('id', id);
-  if (error) { showToast('Error: ' + error.message); return; }
-  t.done = newDone; t.progress = newDone ? t.steps : 0;
+  const done = !t.done;
+  const {error} = await db.from('tasks').update({done, progress: done?t.steps:0, updated_at:new Date()}).eq('id', id);
+  if (error) { toast('Error: '+error.message); return; }
+  t.done = done; t.progress = done ? t.steps : 0;
   renderTasks();
-  showToast(newDone ? 'Marked complete ✓' : 'Marked incomplete');
+  toast(done ? 'Marked done ✓' : 'Marked incomplete');
 }
 
-async function resetDayProgress() {
-  if (!confirm('Reset all task progress for ' + DAYS[currentDay] + '?')) return;
-  const dayTaskIds = tasks.filter(t => t.day_index === currentDay).map(t => t.id);
-  if (!dayTaskIds.length) { showToast('No tasks to reset'); return; }
-  const { error } = await supabase.from('tasks').update({ progress: 0, done: false, updated_at: new Date() }).in('id', dayTaskIds);
-  if (error) { showToast('Error: ' + error.message); return; }
-  tasks.forEach(t => { if (t.day_index === currentDay) { t.progress = 0; t.done = false; } });
+async function resetDay() {
+  if (!confirm('Reset all task progress for ' + DAYS[day] + '?')) return;
+  flushFields();
+  const ids = tasks.filter(t => t.day_index === day).map(t => t.id);
+  if (!ids.length) { toast('No tasks to reset'); return; }
+  const {error} = await db.from('tasks').update({progress:0, done:false, updated_at:new Date()}).in('id', ids);
+  if (error) { toast('Error: '+error.message); return; }
+  tasks.forEach(t => { if (t.day_index === day) { t.progress=0; t.done=false; } });
   renderTasks();
-  showToast('Day reset! ✓');
+  toast('Day reset ✓');
 }
 
 // ── HELPERS ───────────────────────────────────────────────
-function setStatus(text, sub, ok) {
-  document.getElementById('status-dot').className = 'status-dot ' + (ok ? 'status-ok' : 'status-alert');
-  document.getElementById('status-text').textContent = text;
-  document.getElementById('status-sub').textContent = sub;
-}
-
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function showToast(m) {
-  const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show');
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
-
-// ── INIT ──────────────────────────────────────────────────
-(function init() {
-  initSupabase('https://qfjwwoxmnatfagqjkgpv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmand3b3htbmF0ZmFncWprZ3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMzcyNTgsImV4cCI6MjA4OTgxMzI1OH0.4pGQPBwk9Off59LHHcPKzrSSDwINJcTv0EpGkbjH5Hc');
-})();
+function setStatus(ok, text, sub) {
+  document.getElementById('status-dot').className = 'status-dot ' + (ok?'dot-ok':'dot-err');
+  document.getElementById('status-text').textContent = text;
+  document.getElementById('status-sub').textContent = sub||'';
+}
 </script>
 </body>
 </html>
