@@ -178,22 +178,27 @@ function saveSupabaseConfig() {
 }
 
 async function initSupabase(url, key) {
-  const statusEl = document.getElementById('connect-status');
-  if (statusEl) { statusEl.textContent = 'Connecting…'; statusEl.style.color = '#4f46e5'; }
   try {
-    if (!window.supabase || !window.supabase.createClient) {
-      throw new Error('Supabase library not loaded. Check your internet connection.');
+    // Wait for supabase library if not ready yet
+    let attempts = 0;
+    while ((!window.supabase || !window.supabase.createClient) && attempts < 20) {
+      await new Promise(r => setTimeout(r, 100));
+      attempts++;
     }
-    const client = window.supabase.createClient(url, key);
-    // Test the connection with a real query
-    const { error } = await client.from('quest_state').select('id').limit(1);
+    if (!window.supabase || !window.supabase.createClient) {
+      throw new Error('Supabase library failed to load');
+    }
+    supabase = window.supabase.createClient(url, key);
+    const { error } = await supabase.from('quest_state').select('id').limit(1);
     if (error) throw new Error(error.message);
-    supabase = client;
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('pin-screen').style.display = 'block';
   } catch(e) {
-    if (statusEl) { statusEl.textContent = 'Error: ' + e.message; statusEl.style.color = '#dc2626'; }
-    console.error('Supabase connect error:', e);
+    console.error('Supabase error:', e.message);
+    // Show error on screen
+    document.getElementById('setup-screen').style.display = 'block';
+    const h = document.querySelector('#setup-screen h2');
+    if (h) h.textContent = 'Connection error: ' + e.message;
   }
 }
 
@@ -439,13 +444,8 @@ function showToast(m) {
 
 // ── INIT ──────────────────────────────────────────────────
 (function init() {
-  const { url, key } = getSupabaseConfig();
-  if (url && key) {
-    document.getElementById('setup-screen').style.display = 'none';
-    initSupabase(url, key);
-  } else {
-    document.getElementById('setup-screen').style.display = 'block';
-  }
+  document.getElementById('setup-screen').style.display = 'none';
+  initSupabase('https://qfjwwoxmnatfagqjkgpv.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmand3b3htbmF0ZmFncWprZ3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMzcyNTgsImV4cCI6MjA4OTgxMzI1OH0.4pGQPBwk9Off59LHHcPKzrSSDwINJcTv0EpGkbjH5Hc');
 })();
 </script>
 </body>
