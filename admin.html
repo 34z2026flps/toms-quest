@@ -56,7 +56,7 @@ select.field-input{background:#fff;}
 </head>
 <body>
 
-<div id="setup-screen" style="display:none">
+<div id="setup-screen" style="display:block">
   <div class="container" style="max-width:500px;padding-top:40px">
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:36px">⚙️</div>
@@ -423,6 +423,7 @@ function showToast(m) {
 (function init() {
   const { url, key } = getSupabaseConfig();
   if (url && key) {
+    document.getElementById('setup-screen').style.display = 'none';
     initSupabase(url, key);
   } else {
     document.getElementById('setup-screen').style.display = 'block';
