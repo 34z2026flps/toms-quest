@@ -163,19 +163,37 @@ function getSupabaseConfig() {
 function saveSupabaseConfig() {
   const url = document.getElementById('setup-url').value.trim();
   const key = document.getElementById('setup-key').value.trim();
-  if (!url || !key) { alert('Please enter both fields'); return; }
+  const statusEl = document.getElementById('connect-status');
+  if (!url || !key) {
+    if (statusEl) { statusEl.textContent = 'Please enter both fields'; statusEl.style.color = '#dc2626'; }
+    return;
+  }
+  if (!url.startsWith('https://')) {
+    if (statusEl) { statusEl.textContent = 'URL should start with https://'; statusEl.style.color = '#dc2626'; }
+    return;
+  }
   localStorage.setItem('sb_url', url);
   localStorage.setItem('sb_key', key);
   initSupabase(url, key);
 }
 
-function initSupabase(url, key) {
+async function initSupabase(url, key) {
+  const statusEl = document.getElementById('connect-status');
+  if (statusEl) { statusEl.textContent = 'Connecting…'; statusEl.style.color = '#4f46e5'; }
   try {
-    supabase = window.supabase.createClient(url, key);
+    if (!window.supabase || !window.supabase.createClient) {
+      throw new Error('Supabase library not loaded. Check your internet connection.');
+    }
+    const client = window.supabase.createClient(url, key);
+    // Test the connection with a real query
+    const { error } = await client.from('quest_state').select('id').limit(1);
+    if (error) throw new Error(error.message);
+    supabase = client;
     document.getElementById('setup-screen').style.display = 'none';
     document.getElementById('pin-screen').style.display = 'block';
   } catch(e) {
-    alert('Could not connect: ' + e.message);
+    if (statusEl) { statusEl.textContent = 'Error: ' + e.message; statusEl.style.color = '#dc2626'; }
+    console.error('Supabase connect error:', e);
   }
 }
 
