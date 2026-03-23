@@ -807,6 +807,23 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
       <div style="font-size:11px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">✏️ Your writing prompt</div>
       <div style="font-size:14px;font-weight:700;color:#1a1a2e;line-height:1.6" id="wa-prompt"></div>
     </div>
+    <!-- Teacher images (if any) -->
+    <div id="wa-images" style="display:none;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">📄 Reference images</div>
+      <div id="wa-image-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+    <!-- Paste zone for student to add their own images -->
+    <div style="margin-bottom:8px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">📎 Add images to your work</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <label style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:9px;cursor:pointer;font-size:12px;font-weight:700;color:#16a34a">
+          📷 Upload
+          <input type="file" accept="image/*" multiple style="display:none" onchange="studentAddImages(event)">
+        </label>
+        <div style="font-size:11px;color:#94a3b8;font-weight:600">or Ctrl+V to paste an image</div>
+      </div>
+      <div id="student-images" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
+    </div>
     <textarea id="wa-textarea" placeholder="Start writing here… Take your time and use full sentences."
       style="width:100%;min-height:200px;border-radius:11px;border:2px solid #e5e7eb;padding:12px;font-family:'Nunito','Segoe UI',-apple-system,sans-serif;font-size:14px;line-height:1.7;resize:vertical;outline:none;color:#1a1a2e"
       onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#e5e7eb'"></textarea>
@@ -5015,20 +5032,108 @@ function progressTaskToComplete(task) {
 // ── WRITING ACTIVITY ─────────────────────────────────────
 let writingTask = null;
 
+let studentImagesData = [];
+
 function openWritingActivity(task) {
   writingTask = task;
+  studentImagesData = [];
   setView('writing-activity');
   document.getElementById('wa-title').textContent = task.name;
-  document.getElementById('wa-prompt').textContent = task.activityContent || task.meta || 'Write your response below.';
-  document.getElementById('wa-xp').textContent = '+' + task.xp + ' XP';
 
-  const minWords = task.minWords || 30;
-  document.getElementById('wa-min-words').textContent = minWords;
+  // Parse content — may be JSON with images
+  let promptText = task.activityContent || task.meta || 'Write your response below.';
+  let teacherImages = [];
+  try {
+    const parsed = JSON.parse(task.activityContent || '');
+    if (parsed.text !== undefined) { promptText = parsed.text; teacherImages = parsed.images || []; }
+  } catch(e) {}
+
+  document.getElementById('wa-prompt').textContent = promptText;
+  document.getElementById('wa-xp').textContent = '+' + task.xp + ' XP';
+  document.getElementById('wa-min-words').textContent = task.minWords || 30;
   document.getElementById('wa-textarea').value = task.savedWriting || '';
   updateWritingCount();
-
-  // Restore saved work
   document.getElementById('wa-textarea').oninput = updateWritingCount;
+
+  // Show teacher reference images
+  const imgWrap = document.getElementById('wa-images');
+  const imgList = document.getElementById('wa-image-list');
+  if (teacherImages.length && imgWrap && imgList) {
+    imgList.innerHTML = '';
+    teacherImages.forEach((img, i) => {
+      const el = document.createElement('img');
+      el.src = img.data;
+      el.style.cssText = 'height:110px;border-radius:10px;border:2px solid #e5e7eb;cursor:pointer;object-fit:cover';
+      el.onclick = () => showFullImage(img.data);
+      imgList.appendChild(el);
+    });
+    imgWrap.style.display = 'block';
+  } else if (imgWrap) { imgWrap.style.display = 'none'; }
+
+  renderStudentImages();
+
+  // Paste handler on writing screen
+  const ta = document.getElementById('wa-textarea');
+  if (ta) {
+    ta.onpaste = (e) => {
+      const items = Array.from(e.clipboardData?.items || []);
+      const imgItem = items.find(i => i.type.startsWith('image/'));
+      if (!imgItem) return; // let normal paste happen for text
+      e.preventDefault();
+      const reader = new FileReader();
+      reader.onload = ev => {
+        studentImagesData.push({ name: 'pasted.png', data: ev.target.result });
+        renderStudentImages();
+        showToast('Image added to your work!');
+      };
+      reader.readAsDataURL(imgItem.getAsFile());
+    };
+  }
+}
+
+function studentAddImages(event) {
+  const files = Array.from(event.target.files);
+  let done = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      studentImagesData.push({ name: file.name, data: e.target.result });
+      done++;
+      if (done === files.length) { renderStudentImages(); showToast(files.length + ' image' + (files.length>1?'s':'') + ' added!'); }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderStudentImages() {
+  const c = document.getElementById('student-images');
+  if (!c) return;
+  c.innerHTML = '';
+  studentImagesData.forEach((img, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;display:inline-block';
+    const el = document.createElement('img');
+    el.src = img.data;
+    el.style.cssText = 'height:80px;border-radius:8px;border:2px solid #e5e7eb;cursor:pointer;object-fit:cover';
+    el.onclick = () => showFullImage(img.data);
+    const del = document.createElement('button');
+    del.textContent = '✕';
+    del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#dc2626;color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:800;cursor:pointer';
+    del.onclick = () => { studentImagesData.splice(i,1); renderStudentImages(); };
+    wrap.appendChild(el); wrap.appendChild(del);
+    c.appendChild(wrap);
+  });
+}
+
+function showFullImage(src) {
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px';
+  div.onclick = () => div.remove();
+  const img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'max-width:100%;max-height:100%;border-radius:12px;object-fit:contain';
+  div.appendChild(img);
+  document.body.appendChild(div);
 }
 
 function updateWritingCount() {
