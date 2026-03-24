@@ -222,6 +222,9 @@ function rdTasks(){
       +'<select class="fi" id="ts'+t.id+'" style="max-width:120px">'+SUBJS.map(s=>'<option'+(s===t.subject?' selected':'')+'>'+s+'</option>').join('')+'</select>'
       +'<input class="fi num" type="number" id="tx'+t.id+'" value="'+t.xp+'" title="XP">'
       +'<input class="fi num" type="number" id="tstep'+t.id+'" value="'+t.steps+'" title="Steps"></div>'
+      +'<div class="fr"><div class="fl">Mode</div>'
+      +'<select class="fi" id="tmode'+t.id+'" style="max-width:220px" onchange="updateModeOpts('+t.id+')">'+getModeOpts(t.subject, t.task_mode||'')+"</select>"
+      +'<span style="font-size:10px;color:#94a3b8;align-self:center;padding-left:6px">How Tom does this task</span></div>'
       +'<div class="fr"><div class="fl">Link</div><input class="fi" id="tl'+t.id+'" value="'+esc(t.link||'')+'" placeholder="YouTube / Google Slides URL"></div>'
       +'<div class="fr" style="align-items:flex-start"><div class="fl" style="padding-top:4px">Content</div><div style="flex:1">'
       +'<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">'
@@ -312,10 +315,10 @@ function printDay(){
   w.document.close();w.print();
 }
 
-function flush(){tasks.filter(t=>t.day_index===day).forEach(t=>{const f=id=>document.getElementById(id+t.id)?.value;if(f('tn'))t.name=f('tn');if(f('tm'))t.meta=f('tm');if(f('ts'))t.subject=f('ts');if(f('tx'))t.xp=parseInt(f('tx'))||20;if(f('tstep'))t.steps=parseInt(f('tstep'))||1;if(f('tl'))t.link=f('tl');if(f('tc'))t.activity_content=f('tc');if(f('tw'))t.min_words=parseInt(f('tw'))||50;const g=document.getElementById('tg'+t.id);if(g)t.unlocks_games=Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid);});}
+function flush(){tasks.filter(t=>t.day_index===day).forEach(t=>{const f=id=>document.getElementById(id+t.id)?.value;if(f('tn'))t.name=f('tn');if(f('tm'))t.meta=f('tm');if(f('ts'))t.subject=f('ts');if(f('tx'))t.xp=parseInt(f('tx'))||20;if(f('tstep'))t.steps=parseInt(f('tstep'))||1;if(f('tl'))t.link=f('tl');if(f('tc'))t.activity_content=f('tc');if(f('tw'))t.min_words=parseInt(f('tw'))||50;const g=document.getElementById('tg'+t.id);if(g)t.unlocks_games=Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid);const mo=document.getElementById('tmode'+t.id);if(mo)t.task_mode=mo.value;});}
 async function saveXP(){const xp=parseInt(document.getElementById('xpv').value)||0;const{error}=await db.from('quest_state').update({xp,updated_at:new Date()}).eq('id','tom');error?toast('Error: '+error.message):toast('XP saved ✓');}
-async function save(id){const f=fid=>document.getElementById(fid+id)?.value??'';const g=document.getElementById('tg'+id);const ug=g?Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid):[];const imgs=taskImages[id];let cv=f('tc');if(imgs&&imgs.length)cv=JSON.stringify({text:f('tc'),images:imgs});const u={name:f('tn'),meta:f('tm'),subject:f('ts'),xp:parseInt(f('tx'))||20,steps:parseInt(f('tstep'))||1,link:f('tl'),activity_content:cv,min_words:parseInt(f('tw'))||50,unlocks_games:ug,updated_at:new Date()};const{error}=await db.from('tasks').update(u).eq('id',id);error?toast('Error: '+error.message):(Object.assign(tasks.find(t=>t.id===id)||{},u),toast('Saved ✓'));}
-async function addTask(){flush();const sub=document.getElementById('nsub').value;const nel=document.getElementById('nnm');const nm=nel.value.trim()||sub+' task';const{data,error}=await db.from('tasks').insert({day_index:day,subject:sub,name:nm,meta:META_DEF[sub]||'Complete the task',xp:XP_DEF[sub]||20,steps:1,progress:0,done:false,link:'',activity_content:'',min_words:50,unlocks_games:[]}).select().single();if(error){toast('Error: '+error.message);return;}tasks.push(data);nel.value='';rdTasks();toast(sub+' task added!');}
+async function save(id){const f=fid=>document.getElementById(fid+id)?.value??'';const g=document.getElementById('tg'+id);const ug=g?Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid):[];const imgs=taskImages[id];let cv=f('tc');if(imgs&&imgs.length)cv=JSON.stringify({text:f('tc'),images:imgs});const tm=document.getElementById('tmode'+id)?.value||'';const u={name:f('tn'),meta:f('tm'),subject:f('ts'),xp:parseInt(f('tx'))||20,steps:parseInt(f('tstep'))||1,link:f('tl'),activity_content:setMode(cv,tm),min_words:parseInt(f('tw'))||50,unlocks_games:ug,updated_at:new Date(),task_mode:tm};const{error}=await db.from('tasks').update(u).eq('id',id);error?toast('Error: '+error.message):(Object.assign(tasks.find(t=>t.id===id)||{},u),toast('Saved ✓'));}
+async function addTask(){flush();const sub=document.getElementById('nsub').value;const nel=document.getElementById('nnm');const nm=nel.value.trim()||sub+' task';const{data,error}=await db.from('tasks').insert({day_index:day,subject:sub,name:nm,meta:META_DEF[sub]||'Complete the task',xp:XP_DEF[sub]||20,steps:1,progress:0,done:false,link:'',activity_content:'',min_words:50,unlocks_games:[],task_mode:''}).select().single();if(error){toast('Error: '+error.message);return;}tasks.push(data);nel.value='';rdTasks();toast(sub+' task added!');}
 async function del(id){if(!confirm('Delete?'))return;flush();const{error}=await db.from('tasks').delete().eq('id',id);if(error){toast('Error: '+error.message);return;}tasks=tasks.filter(t=>t.id!==id);rdTasks();toast('Deleted');}
 async function tog(id){const t=tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;t.progress=t.done?t.steps:0;const{error}=await db.from('tasks').update({done:t.done,progress:t.progress,updated_at:new Date()}).eq('id',id);if(error){toast('Error: '+error.message);return;}rdTasks();toast(t.done?'Marked done ✓':'Unmarked');}
 function mv(id,dir){flush();const list=tasks.filter(t=>t.day_index===day);const idx=list.findIndex(t=>t.id===id);const ni=idx+dir;if(ni<0||ni>=list.length)return;const ai=tasks.indexOf(list[idx]),bi=tasks.indexOf(list[ni]);[tasks[ai],tasks[bi]]=[tasks[bi],tasks[ai]];rdTasks();}
@@ -898,6 +901,47 @@ function generateWrongAnswers(correct, question) {
 }
 
 
+
+
+// ── TASK MODE HELPERS ─────────────────────────────────────
+const TASK_MODES = {
+  Reading:   [['','Auto (choose when Tom opens)'],['reading','📖 Reading (Tom reads text)'],['reading-write','✏️ Writing response']],
+  Maths:     [['','Auto (choose when Tom opens)'],['maths-quiz','📝 Written quiz (show working)'],['maths-mc','🔘 Multiple choice quiz'],['maths-image','🖼️ Image / worksheet']],
+  Writing:   [['','Auto (writing)'],['writing','✏️ Writing'],['worksheet','🖼️ Image / worksheet']],
+  Science:   [['','Auto (multiple choice)'],['science','🔘 Multiple choice'],['worksheet','🖼️ Image / worksheet']],
+  History:   [['','Auto (multiple choice)'],['history','🔘 Multiple choice'],['worksheet','🖼️ Image / worksheet']],
+  Geography: [['','Auto (multiple choice)'],['geography','🔘 Multiple choice'],['worksheet','🖼️ Image / worksheet']],
+  Spelling:  [['','Auto (spelling)'],['spelling','🐝 Spelling activity']],
+  Video:     [['','Auto (video)'],['video','🎬 Video']],
+  Slides:    [['','Auto (slides)'],['slides','📊 Google Slides']],
+  Worksheet: [['worksheet','🖼️ Image / worksheet']],
+  Other:     [['','Auto'],['generic','📌 Generic']],
+};
+
+function setMode(actContent, mode) {
+  if (!mode) return actContent; // no mode set, leave content as-is
+  try {
+    const p = JSON.parse(actContent || '{}');
+    p.mode = mode;
+    return JSON.stringify(p);
+  } catch(e) {
+    // plain text content — wrap it
+    return JSON.stringify({ mode: mode, text: actContent || '' });
+  }
+}
+
+function getModeOpts(subject, currentMode) {
+  const opts = TASK_MODES[subject] || TASK_MODES.Other;
+  return opts.map(([val,lbl]) => '<option value="'+val+'"'+(val===currentMode?' selected':'')+'>'+lbl+'</option>').join('');
+}
+
+function updateModeOpts(taskId) {
+  const subj = document.getElementById('ts'+taskId)?.value || 'Other';
+  const sel = document.getElementById('tmode'+taskId);
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = getModeOpts(subj, cur);
+}
 
 let qbModalTaskId=null;
 function qbInit(){const sel=document.getElementById('qbm-cat');if(!sel||sel.options.length)return;Object.entries(MATHS_BANK).forEach(([id,cat])=>{const o=document.createElement('option');o.value=id;o.textContent=cat.icon+' '+cat.label;sel.appendChild(o);});qbmLoadSubs();}
