@@ -64,6 +64,10 @@
   .qbank-activity .pq-o.correct{background:#dcfce7;border-color:#22c55e;color:#15803d;}
   .qbank-activity .pq-o.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b;}
 
+
+.ws-file-pick{display:flex;gap:8px;padding:8px 10px;background:#f8faff;border-bottom:1px solid #e5e7eb;flex-wrap:wrap;align-items:center}
+.ws-file-pick label{display:flex;align-items:center;gap:5px;padding:5px 10px;background:#4f46e5;color:#fff;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700}
+
 </style>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -581,7 +585,11 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
 <div class="gs" id="story-scr"><div class="g-hdr"><button class="bk-btn" onclick="cg()">← Back</button><div class="g-title">Story Builder 🐉</div></div><div class="g-box" style="text-align:left"><div style="font-size:10px;font-weight:700;color:var(--gray);margin-bottom:7px" id="st-path"></div><div class="story-text" id="st-text"></div><div class="story-choices" id="st-choices"></div><div id="st-end" style="display:none;text-align:center;padding:10px"><div style="font-size:28px;margin-bottom:8px">🎉</div><div style="font-size:15px;font-weight:800;margin-bottom:10px">Adventure complete!</div><button class="btn btn-p" onclick="startStory()">Play again</button> <button class="btn btn-g" onclick="cg()">Exit</button></div></div></div>
 <div class="gs" id="build-scr"><div class="g-hdr"><button class="bk-btn" onclick="cg()">← Back</button><div class="g-title">Pixel Builder 🏗️</div></div><div class="g-box"><div class="g-sc">Level <span id="bl-lv">1</span>/5 | <span id="bl-inf">Match the target!</span></div><div class="build-target"><div style="font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;margin-bottom:5px">🎯 Target</div><div class="build-grid" id="bl-target"></div></div><div class="build-grid" id="bl-canvas" style="margin:0 auto"></div><div class="build-palette" id="bl-palette"></div><div style="display:flex;gap:7px"><button style="flex:1;padding:9px;border-radius:10px;border:none;background:#f3f4f6;color:var(--gray);font-family:'Nunito','Segoe UI',-apple-system,sans-serif;font-size:12px;font-weight:800;cursor:pointer" onclick="clearBuild()">🗑️ Clear</button><button style="flex:1;padding:9px;border-radius:10px;border:none;background:#4f46e5;color:#fff;font-family:'Nunito','Segoe UI',-apple-system,sans-serif;font-size:12px;font-weight:800;cursor:pointer" onclick="checkBuild()">✓ Check</button></div></div></div>
 <div class="gs" id="draw-scr"><div class="g-hdr"><button class="bk-btn" onclick="cg()">← Back</button><div class="g-title">Art Studio 🎨</div></div><div class="draw-toolbar"><button class="d-tool-btn active" id="dt-pen" onclick="setDTool('pen')">✏️ Pen</button><button class="d-tool-btn" id="dt-fill" onclick="setDTool('fill')">🪣 Fill</button><button class="d-tool-btn" id="dt-erase" onclick="setDTool('erase')">🧹 Erase</button><div style="width:1px;height:20px;background:#e5e7eb"></div><div class="c-dot active" style="background:#1a1a2e" onclick="setDC('#1a1a2e',this)"></div><div class="c-dot" style="background:#dc2626" onclick="setDC('#dc2626',this)"></div><div class="c-dot" style="background:#2563eb" onclick="setDC('#2563eb',this)"></div><div class="c-dot" style="background:#16a34a" onclick="setDC('#16a34a',this)"></div><div class="c-dot" style="background:#d97706" onclick="setDC('#d97706',this)"></div><div class="c-dot" style="background:#be185d" onclick="setDC('#be185d',this)"></div><div class="c-dot" style="background:#7c3aed" onclick="setDC('#7c3aed',this)"></div><div class="c-dot" style="background:#fff;border-color:#d1d5db" onclick="setDC('#fff',this)"></div><div style="width:1px;height:20px;background:#e5e7eb"></div><input type="range" min="2" max="24" value="5" id="draw-size" style="width:55px"><button class="d-tool-btn" onclick="clearDraw()" style="margin-left:auto">🗑️</button></div><div class="draw-wrap"><canvas id="draw-canvas"></canvas></div></div>
-<div class="ws-scr" id="ws-scr"><div class="g-hdr"><button class="bk-btn" onclick="closeWs()">← Back</button><div class="g-title" id="ws-title">Worksheet</div></div><div class="draw-toolbar"><button class="d-tool-btn active" id="wt-pen" onclick="setWTool('pen')">✏️ Pen</button><button class="d-tool-btn" id="wt-erase" onclick="setWTool('erase')">🧹 Erase</button><div style="width:1px;height:20px;background:#e5e7eb"></div><div class="c-dot active" style="background:#4f46e5" onclick="setWC('#4f46e5',this)"></div><div class="c-dot" style="background:#dc2626" onclick="setWC('#dc2626',this)"></div><div class="c-dot" style="background:#16a34a" onclick="setWC('#16a34a',this)"></div><div class="c-dot" style="background:#1a1a2e" onclick="setWC('#1a1a2e',this)"></div><div style="width:1px;height:20px;background:#e5e7eb"></div><input type="range" min="2" max="18" value="4" id="ws-size" style="width:55px"><button class="d-tool-btn" onclick="clearWsCanvas()">🗑️</button><button class="d-tool-btn" style="background:var(--greenl);color:var(--green);border-color:#22c55e" onclick="markWsDone()">✓ Done</button></div><div class="draw-wrap"><canvas id="ws-canvas"></canvas></div></div>
+<div class="ws-scr" id="ws-scr"><div class="g-hdr"><button class="bk-btn" onclick="closeWs()">← Back</button><div class="g-title" id="ws-title">Worksheet</div></div>
+<div class="ws-file-pick">
+  <label>📂 Open file<input type="file" accept="image/*,.pdf,.docx,.doc,.pptx" style="display:none" onchange="wsOpenFile(event)"></label>
+  <span style="font-size:10px;color:#94a3b8">Images, PDFs — tap to load onto canvas</span>
+</div><div class="draw-toolbar"><button class="d-tool-btn active" id="wt-pen" onclick="setWTool('pen')">✏️ Pen</button><button class="d-tool-btn" id="wt-erase" onclick="setWTool('erase')">🧹 Erase</button><div style="width:1px;height:20px;background:#e5e7eb"></div><div class="c-dot active" style="background:#4f46e5" onclick="setWC('#4f46e5',this)"></div><div class="c-dot" style="background:#dc2626" onclick="setWC('#dc2626',this)"></div><div class="c-dot" style="background:#16a34a" onclick="setWC('#16a34a',this)"></div><div class="c-dot" style="background:#1a1a2e" onclick="setWC('#1a1a2e',this)"></div><div style="width:1px;height:20px;background:#e5e7eb"></div><input type="range" min="2" max="18" value="4" id="ws-size" style="width:55px"><button class="d-tool-btn" onclick="clearWsCanvas()">🗑️</button><button class="d-tool-btn" style="background:var(--greenl);color:var(--green);border-color:#22c55e" onclick="markWsDone()">✓ Done</button></div><div class="draw-wrap"><canvas id="ws-canvas"></canvas></div></div>
 <div class="sl-scr" id="sl-scr"><div class="g-hdr"><button class="bk-btn" onclick="closeSl()">← Back</button><div class="g-title" id="sl-title">Presentation</div></div><div class="sl-wrap"><iframe id="sl-frame" allowfullscreen></iframe></div><div style="display:flex;gap:7px;margin-top:9px"><button class="btn btn-g" onclick="closeSl()">← Back</button><button class="btn btn-gr" onclick="markSlDone()">✓ Mark complete</button></div></div>
 
 
@@ -1992,13 +2000,172 @@ function markSlDone(){const t=findTask(state.slTaskId);if(t)progressTask(t);clos
 // WORKSHEET
 // ═══════════════════════════════════════════════════════
 let wsCtx,wsDrawing=false,wsTool='pen',wsColor='#4f46e5';
-function openWs(t){state.wsTaskId=t.id;document.getElementById('ws-title').textContent=t.name;setView('ws-scr');const canvas=document.getElementById('ws-canvas');if(t.wsData){const img=new Image();img.onload=()=>{canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;canvas.style.width='100%';wsCtx=canvas.getContext('2d');wsCtx.drawImage(img,0,0);if(t.annotation){const a=new Image();a.onload=()=>wsCtx.drawImage(a,0,0);a.src=t.annotation;}initWsEv(canvas);};img.src=t.wsData;}else{canvas.width=600;canvas.height=400;wsCtx=canvas.getContext('2d');wsCtx.fillStyle='#fff';wsCtx.fillRect(0,0,600,400);initWsEv(canvas);}}
+// Worksheet pages for multi-page support
+let wsPages = [], wsPageIdx = 0, wsAnnotations = {};
+
+function openWs(t) {
+  state.wsTaskId = t.id;
+  document.getElementById('ws-title').textContent = t.name;
+  setView('ws-scr');
+  wsAnnotations = {};
+  wsPageIdx = 0;
+  wsPages = [];
+
+  // Gather all image sources: wsData (legacy), activityContent images
+  if (t.wsData) wsPages.push(t.wsData);
+
+  // Also check activityContent for embedded images
+  if (t.activityContent) {
+    try {
+      const parsed = JSON.parse(t.activityContent);
+      if (parsed.images && parsed.images.length) {
+        parsed.images.forEach(img => wsPages.push(img.data));
+      }
+    } catch(e) {}
+  }
+
+  if (!wsPages.length) {
+    // Blank canvas for free drawing
+    wsPages.push(null);
+  }
+
+  loadWsPage(0);
+  updateWsNav();
+}
+
+function loadWsPage(idx) {
+  // Save current annotation before switching
+  const canvas = document.getElementById('ws-canvas');
+  if (wsCtx && wsPages.length > 1) {
+    wsAnnotations[wsPageIdx] = canvas.toDataURL();
+  }
+  wsPageIdx = idx;
+  const src = wsPages[idx];
+
+  if (src) {
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.style.width = '100%';
+      wsCtx = canvas.getContext('2d');
+      wsCtx.drawImage(img, 0, 0);
+      // Restore annotation for this page
+      if (wsAnnotations[idx]) {
+        const a = new Image();
+        a.onload = () => wsCtx.drawImage(a, 0, 0);
+        a.src = wsAnnotations[idx];
+      }
+      initWsEv(canvas);
+    };
+    img.src = src;
+  } else {
+    // Blank canvas
+    const W = canvas.offsetWidth || 360;
+    canvas.width = W; canvas.height = Math.round(W * 1.4);
+    canvas.style.width = '100%';
+    wsCtx = canvas.getContext('2d');
+    wsCtx.fillStyle = '#fff'; wsCtx.fillRect(0, 0, canvas.width, canvas.height);
+    initWsEv(canvas);
+  }
+}
+
+function updateWsNav() {
+  let nav = document.getElementById('ws-page-nav');
+  if (!nav) {
+    nav = document.createElement('div');
+    nav.id = 'ws-page-nav';
+    nav.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:center;padding:6px 0;background:#f8fafc;border-top:1px solid #e5e7eb';
+    document.getElementById('ws-scr').appendChild(nav);
+  }
+  if (wsPages.length <= 1) { nav.style.display = 'none'; return; }
+  nav.style.display = 'flex';
+  nav.innerHTML = '<button onclick="wsPagePrev()" style="padding:5px 12px;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">← Prev</button>'
+    + '<span style="font-size:12px;font-weight:700;color:#64748b">Page ' + (wsPageIdx+1) + ' of ' + wsPages.length + '</span>'
+    + '<button onclick="wsPageNext()" style="padding:5px 12px;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Next →</button>';
+}
+
+function wsPagePrev() {
+  if (wsPageIdx > 0) { loadWsPage(wsPageIdx - 1); updateWsNav(); }
+}
+function wsPageNext() {
+  if (wsPageIdx < wsPages.length - 1) { loadWsPage(wsPageIdx + 1); updateWsNav(); }
+}
+
+
 function initWsEv(cv){cv.onpointerdown=e=>{wsDrawing=true;wsCtx.beginPath();const p=gp(e,cv);wsCtx.moveTo(p.x,p.y);cv.setPointerCapture(e.pointerId);};cv.onpointermove=e=>{if(!wsDrawing)return;const p=gp(e,cv);wsCtx.lineTo(p.x,p.y);wsCtx.strokeStyle=wsTool==='erase'?'#fff':wsColor;wsCtx.lineWidth=parseInt(document.getElementById('ws-size').value)*(wsTool==='erase'?4:1);wsCtx.lineCap='round';wsCtx.lineJoin='round';wsCtx.stroke();};cv.onpointerup=()=>wsDrawing=false;}
 function gp(e,cv){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*(cv.width/r.width),y:(e.clientY-r.top)*(cv.height/r.height)};}
 function setWTool(t){wsTool=t;document.getElementById('wt-pen').className='d-tool-btn'+(t==='pen'?' active':'');document.getElementById('wt-erase').className='d-tool-btn'+(t==='erase'?' active':'');}
 function setWC(c,el){wsColor=c;document.querySelectorAll('#ws-scr .c-dot').forEach(d=>d.classList.remove('active'));el.classList.add('active');if(wsTool==='erase')setWTool('pen');}
 function clearWsCanvas(){const cv=document.getElementById('ws-canvas');const t=findTask(state.wsTaskId);if(t&&t.wsData){const i=new Image();i.onload=()=>wsCtx.drawImage(i,0,0);i.src=t.wsData;}else{wsCtx.fillStyle='#fff';wsCtx.fillRect(0,0,cv.width,cv.height);}}
 function markWsDone(){const cv=document.getElementById('ws-canvas');const t=findTask(state.wsTaskId);if(t){t.annotation=cv.toDataURL();progressTask(t);}closeWs();}
+
+// ── FILE OPEN ON WORKSHEET ────────────────────────────────
+function wsOpenFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const name = file.name.toLowerCase();
+  event.target.value = '';
+
+  if (name.endsWith('.pdf')) {
+    wsLoadPDF(file);
+  } else if (name.endsWith('.docx') || name.endsWith('.doc')) {
+    showToast('DOCX files: please screenshot or export to PDF first');
+  } else {
+    // Image file
+    const reader = new FileReader();
+    reader.onload = e => {
+      wsPages = [e.target.result];
+      wsAnnotations = {};
+      wsPageIdx = 0;
+      loadWsPage(0);
+      updateWsNav();
+      showToast('Image loaded — draw on it!');
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+async function wsLoadPDF(file) {
+  showToast('Loading PDF…');
+  // Load PDF.js dynamically
+  if (!window.pdfjsLib) {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload = () => {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        res();
+      };
+      s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  wsPages = [];
+  wsAnnotations = {};
+
+  // Render each page to a data URL
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 1.8 });
+    const offscreen = document.createElement('canvas');
+    offscreen.width = viewport.width;
+    offscreen.height = viewport.height;
+    const ctx = offscreen.getContext('2d');
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    wsPages.push(offscreen.toDataURL('image/jpeg', 0.92));
+  }
+
+  wsPageIdx = 0;
+  loadWsPage(0);
+  updateWsNav();
+  showToast('PDF loaded — ' + pdf.numPages + ' page' + (pdf.numPages>1?'s':'') + '!');
+}
+
 function closeWs(){showMain();}
 
 // ═══════════════════════════════════════════════════════
@@ -4900,6 +5067,13 @@ function detectTaskType(task) {
   // fallback by link
   if (task.link && (task.link.includes('youtube.com') || task.link.includes('youtu.be'))) return 'video';
   if (task.wsData) return 'worksheet';
+  // Check if activityContent has embedded images
+  if (task.activityContent) {
+    try {
+      const p = JSON.parse(task.activityContent);
+      if (p.images && p.images.length) return 'worksheet';
+    } catch(e) {}
+  }
   return 'generic';
 }
 
