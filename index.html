@@ -820,6 +820,8 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
       <div style="font-size:11px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px">✏️ Your writing prompt</div>
       <div style="font-size:14px;font-weight:700;color:#1a1a2e;line-height:1.6" id="wa-prompt"></div>
     </div>
+    <!-- Teacher prompt file (PDF/image uploaded as prompt) -->
+    <div id="wa-prompt-file" style="display:none;margin-bottom:12px"></div>
     <!-- Teacher images (if any) -->
     <div id="wa-images" style="display:none;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">📄 Reference images</div>
@@ -5456,46 +5458,84 @@ function openWritingActivity(task) {
   studentImagesData = [];
   setView('writing-activity');
   document.getElementById('wa-title').textContent = task.name;
-
-  // Parse content — may be JSON with images
-  let promptText = task.activityContent || task.meta || 'Write your response below.';
-  let teacherImages = [];
-  try {
-    const parsed = JSON.parse(task.activityContent || '');
-    if (parsed.text !== undefined) { promptText = parsed.text; teacherImages = parsed.images || []; }
-  } catch(e) {}
-
-  document.getElementById('wa-prompt').textContent = promptText;
   document.getElementById('wa-xp').textContent = '+' + task.xp + ' XP';
   document.getElementById('wa-min-words').textContent = task.minWords || 30;
-  document.getElementById('wa-textarea').value = task.savedWriting || '';
-  updateWritingCount();
-  document.getElementById('wa-textarea').oninput = updateWritingCount;
 
-  // Show teacher reference images
-  const imgWrap = document.getElementById('wa-images');
-  const imgList = document.getElementById('wa-image-list');
+  // Parse activityContent — supports: plain text, JSON {text, images, promptFile}
+  let promptText = task.meta || 'Write your response below.';
+  let teacherImages = [];
+  let promptFile = null; // base64 data URL for a file prompt
+
+  if (task.activityContent) {
+    try {
+      const parsed = JSON.parse(task.activityContent);
+      if (parsed.text !== undefined) promptText = parsed.text || promptText;
+      if (parsed.images && parsed.images.length) teacherImages = parsed.images;
+      if (parsed.promptFile) promptFile = parsed.promptFile;
+    } catch(e) {
+      // plain string
+      promptText = task.activityContent || promptText;
+    }
+  }
+
+  // ── Prompt area ──────────────────────────────────────────
+  const promptEl = document.getElementById('wa-prompt');
+  const imgWrap  = document.getElementById('wa-images');
+  const imgList  = document.getElementById('wa-image-list');
+  const fileWrap = document.getElementById('wa-prompt-file');
+
+  // Text prompt
+  promptEl.textContent = promptText;
+
+  // Image prompt(s)
   if (teacherImages.length && imgWrap && imgList) {
     imgList.innerHTML = '';
-    teacherImages.forEach((img, i) => {
+    teacherImages.forEach(img => {
       const el = document.createElement('img');
       el.src = img.data;
-      el.style.cssText = 'height:110px;border-radius:10px;border:2px solid #e5e7eb;cursor:pointer;object-fit:cover';
+      el.style.cssText = 'height:120px;border-radius:10px;border:2px solid #e5e7eb;cursor:pointer;object-fit:cover';
       el.onclick = () => showFullImage(img.data);
       imgList.appendChild(el);
     });
     imgWrap.style.display = 'block';
   } else if (imgWrap) { imgWrap.style.display = 'none'; }
 
+  // File prompt (PDF rendered inline or image full-width)
+  if (fileWrap) {
+    if (promptFile) {
+      fileWrap.style.display = 'block';
+      const isPdf = promptFile.startsWith('data:application/pdf');
+      fileWrap.innerHTML = '';
+      if (isPdf) {
+        // Render PDF pages
+        const pdfBtn = document.createElement('button');
+        pdfBtn.style.cssText = 'width:100%;padding:10px;border-radius:10px;border:1.5px solid #c7d2fe;background:#f8faff;color:#4f46e5;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px';
+        pdfBtn.textContent = '📄 View prompt PDF';
+        pdfBtn.onclick = () => wsLoadDataPDF(promptFile, fileWrap);
+        fileWrap.appendChild(pdfBtn);
+      } else {
+        const img = document.createElement('img');
+        img.src = promptFile;
+        img.style.cssText = 'width:100%;border-radius:10px;border:2px solid #e5e7eb;cursor:pointer;margin-bottom:8px';
+        img.onclick = () => showFullImage(promptFile);
+        fileWrap.appendChild(img);
+      }
+    } else { fileWrap.style.display = 'none'; }
+  }
+
+  // ── Writing area ─────────────────────────────────────────
+  document.getElementById('wa-textarea').value = task.savedWriting || '';
+  updateWritingCount();
+  document.getElementById('wa-textarea').oninput = updateWritingCount;
   renderStudentImages();
 
-  // Paste handler on writing screen
+  // Paste images into writing
   const ta = document.getElementById('wa-textarea');
   if (ta) {
     ta.onpaste = (e) => {
       const items = Array.from(e.clipboardData?.items || []);
       const imgItem = items.find(i => i.type.startsWith('image/'));
-      if (!imgItem) return; // let normal paste happen for text
+      if (!imgItem) return;
       e.preventDefault();
       const reader = new FileReader();
       reader.onload = ev => {
@@ -5505,6 +5545,36 @@ function openWritingActivity(task) {
       };
       reader.readAsDataURL(imgItem.getAsFile());
     };
+  }
+}
+
+// Render a PDF data URL into a container as images (reuses wsLoadPDF logic)
+async function wsLoadDataPDF(dataUrl, container) {
+  container.innerHTML = '<div style="font-size:12px;color:#64748b;padding:8px">Loading PDF…</div>';
+  if (!window.pdfjsLib) {
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';res();};
+      s.onerror=rej; document.head.appendChild(s);
+    });
+  }
+  const base64 = dataUrl.split(',')[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+  const pdf = await window.pdfjsLib.getDocument({data:bytes}).promise;
+  container.innerHTML = '';
+  for (let i=1;i<=pdf.numPages;i++) {
+    const page = await pdf.getPage(i);
+    const vp = page.getViewport({scale:1.5});
+    const cvs = document.createElement('canvas');
+    cvs.width=vp.width; cvs.height=vp.height;
+    cvs.style.cssText='width:100%;border-radius:10px;border:2px solid #e5e7eb;margin-bottom:8px;display:block;cursor:pointer';
+    const ctx=cvs.getContext('2d');
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    cvs.onclick=()=>showFullImage(cvs.toDataURL());
+    container.appendChild(cvs);
   }
 }
 
