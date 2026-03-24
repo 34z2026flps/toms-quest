@@ -661,6 +661,96 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
   </div>
 </div>
 
+<!-- MATHS REVIEW ACTIVITY -->
+<div class="gs" id="mr-activity">
+  <div class="g-hdr">
+    <button class="bk-btn" onclick="showMain()">← Back</button>
+    <div class="g-title" id="mr-title">Maths Review</div>
+    <div style="margin-left:auto;background:#fef9ee;color:#d97706;font-size:11px;font-weight:800;padding:3px 9px;border-radius:9px" id="mr-xp">+25 XP</div>
+  </div>
+  <div class="g-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:#64748b">Question <span id="mr-prog-num">1 / 10</span></div>
+      <div style="font-size:12px;font-weight:700;color:#4f46e5" id="mr-score-live"></div>
+    </div>
+    <div style="height:6px;background:#f3f4f6;border-radius:6px;margin-bottom:16px;overflow:hidden">
+      <div id="mr-prog-bar" style="height:100%;background:#4f46e5;border-radius:6px;transition:width .4s;width:0%"></div>
+    </div>
+    <div id="mr-q-text" style="font-size:22px;font-weight:900;color:#4f46e5;margin:12px 0;text-align:center;line-height:1.3">Question</div>
+    <!-- Multiple choice options -->
+    <div id="mr-mc-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px"></div>
+    <!-- Typed answer -->
+    <div id="mr-typed-wrap" style="display:none">
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px">Show your working:</div>
+        <canvas id="mr-work-canvas" width="600" height="140" style="width:100%;border-radius:10px;border:2px solid #e5e7eb;background:#fff;cursor:crosshair;touch-action:none"></canvas>
+        <div style="display:flex;gap:6px;margin-top:5px;align-items:center">
+          <input type="color" id="mr-pen-color" value="#2563eb" style="width:28px;height:28px;border:none;background:none;cursor:pointer;padding:0">
+          <input type="range" id="mr-pen-size" min="1" max="8" value="3" style="width:60px">
+          <button id="mr-eraser-btn" style="padding:4px 9px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f1f5f9;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">🧹 Erase</button>
+          <button id="mr-clear-btn" style="padding:4px 9px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f1f5f9;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">Clear</button>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px">Your answer:</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="mr-ans-inp" type="text" placeholder="Type your answer…" style="flex:1;padding:10px 14px;border-radius:10px;border:2.5px solid #c7d2fe;font-family:inherit;font-size:18px;font-weight:800;text-align:center;outline:none">
+        <button id="mr-submit-ans" style="padding:10px 18px;border-radius:10px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer">Check ✓</button>
+      </div>
+    </div>
+    <div class="ma-feedback" id="mr-feedback"></div>
+    <button id="mr-next-btn" onclick="mrAdvance()" style="display:none;width:100%;margin-top:10px;padding:12px;border-radius:11px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer">Next question →</button>
+  </div>
+</div>
+
+<!-- MATHS REVIEW FINISH -->
+<div class="gs" id="mr-finish">
+  <div class="g-hdr">
+    <button class="bk-btn" onclick="showMain()">← Back</button>
+    <div class="g-title">Maths Complete!</div>
+  </div>
+  <div class="g-box" style="text-align:center;padding:28px 16px">
+    <div style="font-size:48px;margin-bottom:8px">🌟</div>
+    <div style="font-size:32px;font-weight:900;color:#4f46e5;margin-bottom:4px" id="mrf-score">8/10</div>
+    <div style="font-size:18px;font-weight:700;color:#64748b;margin-bottom:8px" id="mrf-pct">80%</div>
+    <div style="font-size:16px;font-weight:800;margin-bottom:16px" id="mrf-msg">Well done!</div>
+    <div style="background:#fef9ee;color:#d97706;font-size:14px;font-weight:800;padding:8px 18px;border-radius:20px;display:inline-block;margin-bottom:20px" id="mrf-xp">+25 XP earned!</div>
+    <button onclick="showMain()" style="width:100%;padding:13px;border-radius:11px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer">Back to Quest Board 🏠</button>
+  </div>
+</div>
+
+<!-- MATHS WORKSHEET ACTIVITY -->
+<div class="gs" id="mws-activity">
+  <div class="g-hdr">
+    <button class="bk-btn" onclick="showMain()">← Back</button>
+    <div class="g-title" id="mws-title">Maths Worksheet</div>
+    <div style="margin-left:auto;background:#fef9ee;color:#d97706;font-size:11px;font-weight:800;padding:3px 9px;border-radius:9px" id="mws-xp">+25 XP</div>
+  </div>
+  <div style="padding:9px">
+    <!-- Worksheet image + draw overlay -->
+    <div style="position:relative;border-radius:12px;overflow:hidden;border:2px solid #e5e7eb;margin-bottom:10px;background:#f8fafc">
+      <img id="mws-sheet-img" style="width:100%;display:none" alt="Worksheet">
+      <iframe id="mws-sheet-pdf" style="display:none;width:100%;height:500px;border:none"></iframe>
+      <div id="mws-no-sheet" style="display:none;padding:28px;text-align:center;color:#94a3b8;font-size:13px;font-weight:700">No worksheet uploaded yet</div>
+      <!-- Draw canvas overlaid on image -->
+      <canvas id="mws-draw-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;touch-action:none"></canvas>
+    </div>
+    <!-- Draw toolbar -->
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px;background:#fff;border-radius:10px;border:1.5px solid #e5e7eb;margin-bottom:10px">
+      <span style="font-size:11px;font-weight:700;color:#64748b">Draw on worksheet:</span>
+      <input type="color" id="mws-pen-color" value="#dc2626" style="width:28px;height:28px;border:none;background:none;cursor:pointer;padding:0">
+      <input type="range" id="mws-pen-size" min="1" max="10" value="3" style="width:60px">
+      <button id="mws-eraser-btn" style="padding:5px 10px;border-radius:7px;border:1.5px solid #e2e8f0;background:#f1f5f9;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">🧹 Erase</button>
+      <button id="mws-clear-btn" style="padding:5px 10px;border-radius:7px;border:1.5px solid #e2e8f0;background:#f1f5f9;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">Clear drawing</button>
+    </div>
+    <!-- Working out text area -->
+    <div style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:5px">Type your working out here:</div>
+      <textarea id="mws-notes" placeholder="Write your working out, answers and any notes here…" style="width:100%;min-height:100px;padding:10px 12px;border-radius:10px;border:2px solid #e5e7eb;font-family:inherit;font-size:13px;resize:vertical;outline:none"></textarea>
+    </div>
+    <button id="mws-submit" style="width:100%;padding:14px;border-radius:11px;border:none;background:#16a34a;color:#fff;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer">✓ Submit worksheet — +<span id="mws-xp-btn">25</span> XP</button>
+  </div>
+</div>
+
 <!-- GAME SCREENS -->
 <div class="gs" id="math-scr"><div class="g-hdr"><button class="bk-btn" onclick="cg()">← Back</button><div class="g-title">Number Ninja ⚡</div></div><div class="g-box"><div class="g-sc">Score: <span id="ms-score">0</span> | Round <span id="ms-round">1</span>/8</div><div class="streak-bar" id="ms-streak"></div><div class="math-q" id="ms-q"></div><div class="math-opts" id="ms-opts"></div></div></div>
 <div class="gs" id="tt-scr"><div class="g-hdr"><button class="bk-btn" onclick="cg()">← Back</button><div class="g-title">Times Tables ✖️</div></div><div class="g-box"><div class="g-sc">Score: <span id="tt-score">0</span>/10 | Table: <span id="tt-table">2</span>×</div><div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:4px" id="tt-lv-info"></div><div class="tt-q" id="tt-q"></div><input class="tt-input" type="number" id="tt-ans" min="0" max="999" placeholder="?"><br><button class="tt-submit" onclick="checkTT()">Check ✓</button><div id="tt-fb" style="margin-top:8px;font-size:14px;font-weight:800;min-height:20px"></div></div></div>
@@ -1457,7 +1547,7 @@ function getItem(id){return AV_CATALOGUE.find(x=>x.id===id);}
 // ═══════════════════════════════════════════════════════
 // VIEWS
 // ═══════════════════════════════════════════════════════
-const ALL_VIEWS=['main-view','avatar-scr','pin-view','admin-view','reading-activity','maths-activity','writing-activity','video-activity','spelling-activity','code-scr','qbank-activity','math-scr','tt-scr','word-scr','bee-scr','sw-scr','mem-scr','planet-scr','sci-scr','story-scr','build-scr','draw-scr','ws-scr','sl-scr','find-sound-activity'];
+const ALL_VIEWS=['main-view','avatar-scr','pin-view','admin-view','reading-activity','maths-activity','mr-activity','mr-finish','mws-activity','writing-activity','video-activity','spelling-activity','code-scr','qbank-activity','math-scr','tt-scr','word-scr','bee-scr','sw-scr','mem-scr','planet-scr','sci-scr','story-scr','build-scr','draw-scr','ws-scr','sl-scr','find-sound-activity'];
 function setView(id){
   ALL_VIEWS.forEach(v=>{const el=document.getElementById(v);if(el){el.style.display='none';el.classList.remove('open');}});
   const el=document.getElementById(id);if(el){el.style.display='block';el.classList.add('open');}
@@ -2208,7 +2298,7 @@ function openWsForFile(i) {
   openWs(taskCopy);
 }
 
-function openWs(t) {
+function openWs(t, extraFiles) {
   state.wsTaskId = t.id;
   document.getElementById('ws-title').textContent = t.name;
   setView('ws-scr');
@@ -3867,6 +3957,26 @@ function openMathsActivity(task) {
 
 function parseMathsQuestionsEnhanced(task) {
   if (!task.activityContent) return [];
+  // Handle new daily-review JSON format
+  try {
+    const p = JSON.parse(task.activityContent);
+    if (p.mathsType === 'daily-review' && p.questions) {
+      return p.questions.map(line => {
+        const parts = line.split('|');
+        if (parts.length < 2) return null;
+        const q = parts[0].trim(), ans = parts[1].trim();
+        if (parts.length >= 4) {
+          const opts = parts.slice(1).map(x=>x.trim()).filter(Boolean);
+          return { q, answer: ans, type:'mc', opts: shuffle(opts.slice(0,4)), isText:false, needsWorking:false };
+        }
+        return { q, answer: ans, type:'numeric', isText:false, needsWorking:true };
+      }).filter(Boolean);
+    }
+    if (p.text) {
+      task = { ...task, activityContent: p.text };
+    }
+  } catch(e) {}
+  if (!task.activityContent) return [];
   var lines = task.activityContent.split('\n').filter(function(l){ return l.trim(); });
   return lines.map(function(line) {
     var parts = line.split('|');
@@ -4093,8 +4203,14 @@ function openQBankActivity(task) {
   qbankTask = task;
   qbankIdx = 0;
   qbankScore = 0;
-  // Parse MC questions from activityContent
-  var lines = (task.activityContent || '').split('\n').filter(function(l){ return l.includes('|'); });
+  // Parse MC questions - handle both JSON and plain text formats
+  var rawText = task.activityContent || '';
+  try {
+    var p = JSON.parse(rawText);
+    if (p.mathsType === 'daily-review' && p.questions) rawText = p.questions.join('\n');
+    else if (p.text) rawText = p.text;
+  } catch(e) {}
+  var lines = rawText.split('\n').filter(function(l){ return l.includes('|'); });
   qbankQs = lines.map(function(line) {
     var parts = line.split('|');
     if (parts.length < 2) return null;
@@ -5475,9 +5591,10 @@ function openTaskActivity(task) {
   switch(type) {
     case 'reading':        openReadingActivity(task);    break;
     case 'reading-write':  openWritingActivity(task);    break;
-    case 'maths-quiz':     openMathsActivity(task);      break;
-    case 'maths-mc':       openQBankActivity(task);      break;
-    case 'maths-image':    openWs(task);                 break;
+    case 'maths-quiz':     openMathsReview(task);        break;
+    case 'maths-mc':       openMathsReview(task);        break;
+    case 'maths-image':    openMathsWorksheet(task);     break;
+    case 'maths-worksheet':openMathsWorksheetActivity(task); break;
     case 'maths':          openMathsActivity(task);      break;
     case 'writing':        openWritingActivity(task);    break;
     case 'video':          openVideoActivity(task);      break;
@@ -5543,9 +5660,14 @@ function detectTaskType(task) {
   if (task.activityContent) {
     try {
       const p = JSON.parse(task.activityContent);
+      if (p.mathsType === 'daily-review') return p.answerMode === 'mc' ? 'maths-mc' : 'maths-quiz';
+      if (p.mathsType === 'challenge') return p.answerMode === 'mc' ? 'maths-mc' : 'maths-quiz';
+      if (p.mathsType === 'worksheet') return 'maths-worksheet';
+      if (p.mathsType === 'other') return p.mode || 'maths-quiz';
       if (p.mode) return p.mode;
-      if (p.focus || p.sound) return 'sound-find'; // auto-detect sound activity
+      if (p.focus || p.sound) return 'sound-find';
       if (p.images && p.images.length) return 'worksheet';
+      if (p.files && p.files.length && task.subject === 'Maths') return 'maths-image';
     } catch(e) {}
   }
   // Fallback: infer from subject/link (legacy tasks)
@@ -5629,6 +5751,7 @@ function completeReadingTask() {
 }
 
 // ── MATHS ACTIVITY ─────────────────────────────────────
+let wsWorkingMode = "both";
 let mathsTask = null;
 let mathsQs = [];
 let mathsIdx = 0;
@@ -7050,7 +7173,7 @@ const quizData  = {};
 // ── TASK MODE SYSTEM ──────────────────────────────────────
 const TASK_MODES = {
   Reading:   [['','Auto'],['reading','📖 Reading'],['reading-write','✏️ Writing response'],['sound-find','🔊 Find the Sound']],
-  Maths:     [['','Auto'],['maths-quiz','📝 Written quiz'],['maths-mc','🔘 Multiple choice'],['maths-image','🖼️ Image / worksheet']],
+  Maths:     [['daily-review','📊 Daily maths review'],['worksheet','🖼️ Worksheet'],['challenge','🏆 Maths challenge']],
   Writing:   [['','Auto'],['writing','✏️ Writing'],['worksheet','🖼️ Image / worksheet']],
   Science:   [['','Auto'],['science','🔘 Multiple choice'],['worksheet','🖼️ Image']],
   History:   [['','Auto'],['history','🔘 Multiple choice'],['worksheet','🖼️ Image']],
@@ -7348,9 +7471,44 @@ function admRenderTasks() {
     modeRow.appendChild(modeLbl); modeRow.appendChild(modeSel);
     card.appendChild(modeRow);
 
+    // Maths type config panel (shown when subject is Maths)
+    if (t.subject === 'Maths') {
+      let mcfg = {};
+      try { mcfg = JSON.parse(t.activity_content||'{}'); } catch(e){}
+      
+      const mathsTypeRow = document.createElement('div');
+      mathsTypeRow.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:7px';
+      const mtLbl=document.createElement('div');mtLbl.style.cssText='font-size:11px;font-weight:700;color:#94a3b8;min-width:64px;flex-shrink:0';
+      mtLbl.textContent='Maths type';
+      const mtSel=document.createElement('select');
+      mtSel.id='mtype-'+fbKey;
+      mtSel.style.cssText='flex:1;padding:7px 10px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
+      [['daily-review','📊 Daily maths review'],['worksheet','🖼️ Worksheet (upload + annotate)'],['challenge','🏆 Maths challenge']].forEach(([val,lbl])=>{
+        const o=document.createElement('option');o.value=val;o.textContent=lbl;
+        if(val===(mcfg.mathsType||'daily-review'))o.selected=true;
+        mtSel.appendChild(o);
+      });
+      mathsTypeRow.appendChild(mtLbl);mathsTypeRow.appendChild(mtSel);
+      card.appendChild(mathsTypeRow);
+
+      const cfgDiv=document.createElement('div');cfgDiv.id='maths-cfg-'+fbKey;
+      card.appendChild(cfgDiv);
+      buildMathsConfig(fbKey, mcfg);
+
+      mtSel.addEventListener('change', ()=>{
+        let c={};try{c=JSON.parse(admTasks.find(x=>x.id===fbKey)?.activity_content||'{}')}catch(e){}
+        c.mathsType=mtSel.value;
+        buildMathsConfig(fbKey,c);
+      });
+    }
+
     mkRow('Link', mkInp('tl', t.link||'', ''));
 
-    // ── Content tabs ─────────────────────────────────────
+    // ── Content tabs (Maths gets special panel) ──────────
+    if (t.subject === 'Maths') {
+      const mathsPanel = admBuildMathsPanel(fbKey, t);
+      card.appendChild(mathsPanel);
+    } else {
     const tabBar = document.createElement('div');
     tabBar.style.cssText = 'display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px';
     const TABS = [['text','📝 Text'],['images','🖼️ Images'],['quiz','❓ Quiz'],['sound','🔊 Sound']];
@@ -7465,6 +7623,7 @@ function admRenderTasks() {
     sndPanel.appendChild(saveSndBtn);
     card.appendChild(sndPanel);
 
+    } // end if Maths else
     // ── Bottom fields ────────────────────────────────────
     const minwRow = document.createElement('div'); minwRow.style.cssText='display:flex;gap:8px;align-items:center;margin-top:8px';
     minwRow.innerHTML='<div style="font-size:11px;font-weight:700;color:#94a3b8;min-width:64px">Min words</div>';
@@ -8254,6 +8413,766 @@ function tog(id){return admTog(id);}
 function mv(id,dir){return admMv(id,dir);}
 async function save(id){return admSave(id);}
 
+
+// ══════════════════════════════════════════════════════════════════
+// MATHS TASK REDESIGN
+// 3 types: daily-review | worksheet | other
+// ══════════════════════════════════════════════════════════════════
+
+// ── ADMIN: Build maths task config panel ──────────────────────────
+function admBuildMathsPanel(fbKey, task) {
+  const ac = task.activity_content || '';
+  let cfg = {};
+  try { cfg = JSON.parse(ac); } catch(e) {}
+
+  const container = document.createElement('div');
+  container.id = 'maths-panel-' + fbKey;
+
+  // Type selector
+  const typeRow = document.createElement('div');
+  typeRow.style.cssText = 'margin-bottom:12px';
+  typeRow.innerHTML = '<div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">Maths task type</div>';
+  const types = [
+    ['daily-review', '📐 Daily Maths Review', 'Auto-generated questions from quiz bank'],
+    ['worksheet',    '🖼️ Maths Worksheet',    'Upload a worksheet — Tom works on it directly'],
+    ['other',        '✏️ Other / Freeform',    'Enter questions or instructions manually'],
+  ];
+  const curType = cfg.mathsType || 'daily-review';
+  types.forEach(([val, lbl, desc]) => {
+    const btn = document.createElement('div');
+    const active = val === curType;
+    btn.style.cssText = 'padding:10px 12px;border-radius:10px;border:2px solid '+(active?'#4f46e5':'#e2e8f0')+';background:'+(active?'#eef2ff':'#fff')+';cursor:pointer;margin-bottom:6px;transition:all .15s';
+    btn.innerHTML = '<div style="font-size:13px;font-weight:800;color:'+(active?'#4f46e5':'#1e293b')+'">'+lbl+'</div>'
+      +'<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+desc+'</div>';
+    btn.dataset.mtype = val; btn.dataset.fbkey = fbKey;
+    btn.addEventListener('click', function() { admSelectMathsType(fbKey, this.dataset.mtype); });
+    typeRow.appendChild(btn);
+  });
+  container.appendChild(typeRow);
+
+  // Sub-panels
+  container.appendChild(admBuildDailyReviewPanel(fbKey, cfg));
+  container.appendChild(admBuildWorksheetPanel(fbKey, cfg, task));
+  container.appendChild(admBuildOtherPanel(fbKey, cfg));
+
+  admShowMathsSubPanel(fbKey, curType, container);
+  return container;
+}
+
+function admSelectMathsType(fbKey, mtype) {
+  const panel = document.getElementById('maths-panel-' + fbKey);
+  if (!panel) return;
+  // Update button styles
+  panel.querySelectorAll('[data-mtype]').forEach(btn => {
+    const active = btn.dataset.mtype === mtype;
+    btn.style.borderColor = active ? '#4f46e5' : '#e2e8f0';
+    btn.style.background = active ? '#eef2ff' : '#fff';
+    btn.querySelector('div').style.color = active ? '#4f46e5' : '#1e293b';
+  });
+  admShowMathsSubPanel(fbKey, mtype, panel);
+}
+
+function admShowMathsSubPanel(fbKey, mtype, panel) {
+  if (!panel) panel = document.getElementById('maths-panel-' + fbKey);
+  if (!panel) return;
+  ['daily-review','worksheet','other'].forEach(t => {
+    const p = panel.querySelector('#msub-'+t+'-'+fbKey);
+    if (p) p.style.display = t === mtype ? 'block' : 'none';
+  });
+}
+
+function admBuildDailyReviewPanel(fbKey, cfg) {
+  const div = document.createElement('div');
+  div.id = 'msub-daily-review-' + fbKey;
+  div.style.cssText = 'background:#f8faff;border-radius:12px;padding:14px;border:1.5px solid #c7d2fe';
+
+  const TOPICS = [
+    ['addition','➕ Addition'],['subtraction','➖ Subtraction'],['multiplication','✖️ Multiplication'],
+    ['division','➗ Division'],['fractions','½ Fractions'],['decimals','🔢 Decimals'],
+    ['percentage','% Percentages'],['length','📏 Length'],['area','▭ Area'],
+    ['perimeter','⬜ Perimeter'],['time','🕐 Time'],['money','💰 Money'],
+    ['worded','📝 Word Problems'],
+  ];
+  const YEARS = [['yr3','Year 3'],['yr4','Year 4'],['yr56','Year 5-6']];
+  const MODES = [['mc','Multiple choice (tap answer)'],['written','Written answer + working space']];
+
+  div.innerHTML = '<div style="font-size:12px;font-weight:800;color:#4f46e5;margin-bottom:10px">📐 Daily Maths Review settings</div>'
+
+    +'<div style="margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:5px">Year level</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+    +YEARS.map(([val,lbl])=>'<label style="display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;cursor:pointer;font-size:12px;font-weight:700">'
+      +'<input type="radio" name="myr-'+fbKey+'" value="'+val+'"'+(cfg.year===val?' checked':'')+'> '+lbl+'</label>').join('')
+    +'</div></div>'
+
+    +'<div style="margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:5px">Maths topic</div>'
+    +'<select id="mtopic-'+fbKey+'" style="width:100%;padding:8px 10px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none">'
+    +TOPICS.map(([val,lbl])=>'<option value="'+val+'"'+(cfg.topic===val?' selected':'')+'>'+lbl+'</option>').join('')
+    +'</select></div>'
+
+    +'<div style="margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:5px">Number of questions</div>'
+    +'<select id="mqcount-'+fbKey+'" style="width:120px;padding:8px 10px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none">'
+    +[5,8,10,12,15,20].map(n=>'<option value="'+n+'"'+(cfg.count===n?' selected':'')+'>'+n+' questions</option>').join('')
+    +'</select></div>'
+
+    +'<div style="margin-bottom:12px">'
+    +'<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:5px">Answer mode</div>'
+    +MODES.map(([val,lbl])=>'<label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;cursor:pointer;font-size:12px;font-weight:700;margin-bottom:5px">'
+      +'<input type="radio" name="mmode-'+fbKey+'" value="'+val+'"'+(cfg.answerMode===val||(!cfg.answerMode&&val==='mc')?' checked':'')+'> '+lbl+'</label>').join('')
+    +'</div>'
+
+    +'<div id="mdr-preview-'+fbKey+'" style="display:none;background:#fff;border-radius:9px;border:1.5px solid #c7d2fe;padding:10px;font-size:11px;font-family:monospace;white-space:pre-wrap;max-height:160px;overflow-y:auto;color:#334155;margin-bottom:8px"></div>'
+
+    +'<div style="display:flex;gap:8px">'
+    +'<button onclick="admPreviewDailyReview(\''+fbKey+'\')" style="flex:1;padding:9px;border-radius:9px;border:1.5px solid #c7d2fe;background:#f8faff;color:#4f46e5;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer">👁 Preview</button>'
+    +'<button onclick="admSaveDailyReview(\''+fbKey+'\')" style="flex:2;padding:9px;border-radius:9px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer">✓ Save & apply to task</button>'
+    +'</div>';
+
+  return div;
+}
+
+function admBuildWorksheetPanel(fbKey, cfg, task) {
+  const div = document.createElement('div');
+  div.id = 'msub-worksheet-' + fbKey;
+  div.style.cssText = 'background:#f8faff;border-radius:12px;padding:14px;border:1.5px solid #c7d2fe';
+  div.innerHTML = '<div style="font-size:12px;font-weight:800;color:#4f46e5;margin-bottom:10px">🖼️ Maths Worksheet</div>'
+    +'<p style="font-size:12px;color:#64748b;margin-bottom:10px">Upload the worksheet image(s). Tom can either annotate directly on it or use a separate working-out area.</p>'
+    +'<div style="background:#fff;border:2px dashed #c7d2fe;border-radius:10px;padding:14px;text-align:center;cursor:pointer;margin-bottom:8px" onclick="document.getElementById(\'mws-up-'+fbKey+'\').click()">'
+    +'<div style="font-size:22px;margin-bottom:4px">📄</div>'
+    +'<div style="font-size:12px;font-weight:700;color:#4f46e5">Upload worksheet images / PDFs</div>'
+    +'<div style="font-size:10px;color:#94a3b8;margin-top:2px">Multiple files OK</div>'
+    +'</div>'
+    +'<input type="file" id="mws-up-'+fbKey+'" accept="image/*,.pdf" multiple style="display:none" onchange="admHandleWsUpload(event,\''+fbKey+'\')">'
+    +'<div id="mws-files-'+fbKey+'"></div>'
+    +'<div style="margin-top:10px">'
+    +'<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:5px">Working space</div>'
+    +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:5px"><input type="radio" name="mws-work-'+fbKey+'" value="both" checked> Both (annotate on image + typed notes)</label>'
+    +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:5px"><input type="radio" name="mws-work-'+fbKey+'" value="annotate"> Annotate on image only</label>'
+    +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;cursor:pointer"><input type="radio" name="mws-work-'+fbKey+'" value="typed"> Typed working area only</label>'
+    +'</div>'
+    +'<button onclick="admSaveWorksheet(\''+fbKey+'\')" style="width:100%;padding:9px;border-radius:9px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;margin-top:12px">✓ Save worksheet task</button>';
+
+  // Pre-populate existing files
+  if (cfg.files && cfg.files.length) {
+    if (!taskFiles[fbKey]) taskFiles[fbKey] = cfg.files;
+    setTimeout(() => admRenderWsFiles(fbKey), 50);
+  }
+  if (cfg.workingMode) {
+    setTimeout(() => {
+      const radio = div.querySelector(`input[name="mws-work-${fbKey}"][value="${cfg.workingMode}"]`);
+      if (radio) radio.checked = true;
+    }, 50);
+  }
+  return div;
+}
+
+function admBuildOtherPanel(fbKey, cfg) {
+  const div = document.createElement('div');
+  div.id = 'msub-other-' + fbKey;
+  div.style.cssText = 'background:#f8faff;border-radius:12px;padding:14px;border:1.5px solid #c7d2fe';
+  const text = cfg.text || '';
+  div.innerHTML = '<div style="font-size:12px;font-weight:800;color:#4f46e5;margin-bottom:8px">✏️ Freeform Maths</div>'
+    +'<p style="font-size:11px;color:#64748b;margin-bottom:8px">Enter questions one per line: <code>Question|answer</code> or <code>Question|correct|wrong|wrong|wrong</code> for MC</p>'
+    +'<textarea id="mother-'+fbKey+'" style="width:100%;min-height:100px;padding:9px 10px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:monospace;font-size:12px;resize:vertical;outline:none;box-sizing:border-box" placeholder="45 + 32 = ?|77&#10;What is 6 × 7?|42|36|48|54">'+text+'</textarea>'
+    +'<button onclick="admSaveOtherMaths(\''+fbKey+'\')" style="width:100%;padding:9px;border-radius:9px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;margin-top:8px">✓ Save</button>';
+  return div;
+}
+
+// ── Admin: Daily Review save/preview ─────────────────────────────
+function admGetDailyReviewConfig(fbKey) {
+  const year = document.querySelector(`input[name="myr-${fbKey}"]:checked`)?.value || 'yr4';
+  const topic = document.getElementById('mtopic-'+fbKey)?.value || 'addition';
+  const count = parseInt(document.getElementById('mqcount-'+fbKey)?.value) || 10;
+  const answerMode = document.querySelector(`input[name="mmode-${fbKey}"]:checked`)?.value || 'mc';
+  return { year, topic, count, answerMode };
+}
+
+function admPreviewDailyReview(fbKey) {
+  const { year, topic, count } = admGetDailyReviewConfig(fbKey);
+  const qs = admGetMathsQuestions(topic, year, count);
+  const p = document.getElementById('mdr-preview-'+fbKey);
+  if (!p) return;
+  if (!qs.length) { p.style.display='block'; p.textContent='No questions found for this combination.'; return; }
+  p.style.display = 'block';
+  p.textContent = qs.map((q,i) => (i+1)+'. '+q.q+'\n   ✓ '+q.a).join('\n\n');
+}
+
+async function admSaveDailyReview(fbKey) {
+  const cfg = admGetDailyReviewConfig(fbKey);
+  const qs = admGetMathsQuestions(cfg.topic, cfg.year, cfg.count);
+  if (!qs.length) { showToast('No questions for that combination — try a different year/topic'); return; }
+
+  // Build question lines: Q|answer|wrong|wrong|wrong for MC
+  const lines = qs.map(q => {
+    if (cfg.answerMode === 'mc') {
+      const wrongs = generateWrongAnswers(q.a, q.q);
+      return q.q + '|' + q.a + '|' + wrongs.join('|');
+    }
+    return q.q + '|' + q.a;
+  });
+
+  const payload = {
+    mathsType: 'daily-review',
+    year: cfg.year,
+    topic: cfg.topic,
+    count: cfg.count,
+    answerMode: cfg.answerMode,
+    mode: cfg.answerMode === 'mc' ? 'maths-mc' : 'maths-quiz',
+    questions: lines,
+    text: lines.join('\n'),
+  };
+
+  try {
+    const db = await getDb();
+    await db.ref('tasks/'+fbKey).update({ activity_content: JSON.stringify(payload), updated_at: new Date().toISOString() });
+    const t = admTasks.find(x => x.id === fbKey);
+    if (t) t.activity_content = JSON.stringify(payload);
+    showToast('✓ '+qs.length+' questions saved!');
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+function admGetMathsQuestions(topic, year, count) {
+  const cat = MATHS_BANK[topic];
+  if (!cat) return [];
+  // Try exact year match first
+  let pool = cat.subcategories?.[year]?.questions || [];
+  // Fallback: try any subcategory
+  if (!pool.length) {
+    Object.values(cat.subcategories||{}).forEach(sub => { if (pool.length < count) pool = pool.concat(sub.questions||[]); });
+  }
+  if (!pool.length) return [];
+  // Shuffle and take count
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, shuffled.length));
+}
+
+// ── Admin: Worksheet save ─────────────────────────────────────────
+function admHandleWsUpload(event, fbKey) {
+  const files = Array.from(event.target.files);
+  if (!taskFiles[fbKey]) taskFiles[fbKey] = [];
+  let done = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const type = file.type.startsWith('image/') ? 'image' : 'pdf';
+      compressAndAddFile(e.target.result, type, file.name, fbKey, () => {
+        done++;
+        if (done === files.length) { admRenderWsFiles(fbKey); showToast(done+' file(s) added!'); }
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+
+function admRenderWsFiles(fbKey) {
+  const c = document.getElementById('mws-files-'+fbKey);
+  if (!c) return;
+  const files = taskFiles[fbKey] || [];
+  c.innerHTML = '';
+  files.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff;border-radius:8px;border:1.5px solid #e2e8f0;margin-bottom:5px';
+    const icon = f.type === 'image' ? '🖼️' : '📄';
+    row.innerHTML = '<span style="font-size:18px">'+icon+'</span>'
+      +'<span style="flex:1;font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+f.name+'</span>'
+      +'<button style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;cursor:pointer" '
+      +'onclick="taskFiles[\''+fbKey+'\'].splice('+i+',1);admRenderWsFiles(\''+fbKey+'\')">✕</button>';
+    c.appendChild(row);
+  });
+}
+
+async function admSaveWorksheet(fbKey) {
+  const files = taskFiles[fbKey] || [];
+  if (!files.length) { showToast('Upload at least one worksheet image first'); return; }
+  const workingMode = document.querySelector(`input[name="mws-work-${fbKey}"]:checked`)?.value || 'both';
+  const payload = { mathsType: 'worksheet', mode: 'maths-image', files, workingMode };
+  try {
+    const db = await getDb();
+    await db.ref('tasks/'+fbKey).update({ activity_content: JSON.stringify(payload), updated_at: new Date().toISOString() });
+    const t = admTasks.find(x => x.id === fbKey);
+    if (t) t.activity_content = JSON.stringify(payload);
+    showToast('Worksheet saved ✓');
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+async function admSaveOtherMaths(fbKey) {
+  const text = document.getElementById('mother-'+fbKey)?.value || '';
+  const payload = { mathsType: 'other', mode: 'maths-quiz', text };
+  try {
+    const db = await getDb();
+    await db.ref('tasks/'+fbKey).update({ activity_content: JSON.stringify(payload), updated_at: new Date().toISOString() });
+    const t = admTasks.find(x => x.id === fbKey);
+    if (t) t.activity_content = JSON.stringify(payload);
+    showToast('Saved ✓');
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+
+function openMathsWorksheet(task) {
+  let cfg = {};
+  try { cfg = JSON.parse(task.activityContent||''); } catch(e) {}
+  const files = cfg.files || task.wsFiles || [];
+  const workingMode = cfg.workingMode || 'both';
+  // Use existing worksheet screen but configure working mode
+  wsWorkingMode = workingMode;
+  openWs(task, files);
+}
+
+
+// ── MATHS 3-TYPE SYSTEM ──
+// ═══════════════════════════════════════════════════════════════
+// MATHS ADMIN PANEL — 3-TYPE SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+const MATHS_TOPICS = [
+  ['addition','➕ Addition'],['subtraction','➖ Subtraction'],
+  ['multiplication','✖️ Multiplication'],['division','➗ Division'],
+  ['fractions','🍕 Fractions'],['decimals','🔢 Decimals'],
+  ['percentage','💯 Percentage'],['length','📏 Length'],
+  ['area','🔲 Area'],['perimeter','📐 Perimeter'],
+  ['time','🕐 Time'],['money','💰 Money'],
+  ['shapes2d','🔷 2D Shapes'],['shapes3d','🎲 3D Shapes'],
+  ['chance','🎲 Chance'],['data','📊 Data'],['worded','📝 Worded problems']
+];
+
+const MATHS_YEARS = [
+  ['yr3','Year 3'],['yr4','Year 4'],['yr56','Year 5']
+];
+
+// Build the maths config panel inside a task card (called after type dropdown changes)
+function buildMathsConfig(fbKey, cfg) {
+  const type = cfg.mathsType || 'daily-review';
+  const container = document.getElementById('maths-cfg-'+fbKey);
+  if (!container) return;
+  container.innerHTML = '';
+  container.style.cssText = 'margin-top:8px;padding:12px;background:#f8faff;border-radius:10px;border:1.5px solid #c7d2fe';
+
+  if (type === 'daily-review' || type === 'challenge') {
+    // Quiz bank config
+    const yearRow = mkCfgRow('Year level');
+    const yearSel = document.createElement('select');
+    yearSel.id = 'mcfg-year-'+fbKey;
+    yearSel.style.cssText = 'flex:1;padding:6px 10px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
+    MATHS_YEARS.forEach(([val,lbl]) => {
+      const o = document.createElement('option'); o.value=val; o.textContent=lbl;
+      if (val === (cfg.year||'yr3')) o.selected=true;
+      yearSel.appendChild(o);
+    });
+    yearRow.appendChild(yearSel); container.appendChild(yearRow);
+
+    const topicRow = mkCfgRow('Topic');
+    const topicSel = document.createElement('select');
+    topicSel.id = 'mcfg-topic-'+fbKey;
+    topicSel.style.cssText = 'flex:1;padding:6px 10px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
+    MATHS_TOPICS.forEach(([val,lbl]) => {
+      const o = document.createElement('option'); o.value=val; o.textContent=lbl;
+      if (val === (cfg.topic||'addition')) o.selected=true;
+      topicSel.appendChild(o);
+    });
+    topicRow.appendChild(topicSel); container.appendChild(topicRow);
+
+    const countRow = mkCfgRow('Questions');
+    const countSel = document.createElement('select');
+    countSel.id = 'mcfg-count-'+fbKey;
+    countSel.style.cssText = 'width:80px;padding:6px 10px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
+    [5,8,10,12,15,20].forEach(n => {
+      const o = document.createElement('option'); o.value=n; o.textContent=n+' questions';
+      if (n === (cfg.count||10)) o.selected=true;
+      countSel.appendChild(o);
+    });
+    countRow.appendChild(countSel); container.appendChild(countRow);
+
+    const modeRow = mkCfgRow('Answer mode');
+    const modeSel = document.createElement('select');
+    modeSel.id = 'mcfg-mode-'+fbKey;
+    modeSel.style.cssText = 'flex:1;padding:6px 10px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
+    [['mc','🔘 Multiple choice'],['typed','✏️ Type answer + show working']].forEach(([val,lbl]) => {
+      const o = document.createElement('option'); o.value=val; o.textContent=lbl;
+      if (val === (cfg.answerMode||'mc')) o.selected=true;
+      modeSel.appendChild(o);
+    });
+    modeRow.appendChild(modeSel); container.appendChild(modeRow);
+
+    // Preview info
+    const info = document.createElement('div');
+    info.style.cssText = 'font-size:10px;color:#6366f1;font-weight:700;margin-top:8px;padding:6px 8px;background:#eef2ff;border-radius:6px';
+    info.textContent = '✓ Questions generated automatically from the quiz bank when Tom opens this task';
+    container.appendChild(info);
+
+    // Save config button
+    const saveBtn = document.createElement('button');
+    saveBtn.style.cssText = 'width:100%;margin-top:8px;padding:9px;border-radius:9px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer';
+    saveBtn.textContent = '💾 Save maths config';
+    saveBtn.addEventListener('click', () => saveMathsConfig(fbKey));
+    container.appendChild(saveBtn);
+
+  } else if (type === 'worksheet') {
+    // Worksheet upload config
+    const info = document.createElement('div');
+    info.style.cssText = 'font-size:11px;color:#065f46;font-weight:700;margin-bottom:8px';
+    info.textContent = 'Tom will see the worksheet image and can draw on it and type working below.';
+    container.appendChild(info);
+
+    const dropZone = document.createElement('div');
+    dropZone.style.cssText = 'background:#f0fdf4;border:2px dashed #86efac;border-radius:10px;padding:16px;text-align:center;cursor:pointer';
+    dropZone.innerHTML = '<div style="font-size:24px;margin-bottom:4px">🖼️</div><div style="font-size:12px;font-weight:700;color:#065f46">Upload worksheet image or PDF</div><div style="font-size:10px;color:#6b7280;margin-top:4px">JPG, PNG or PDF</div>';
+    const wsInput = document.createElement('input');
+    wsInput.type='file'; wsInput.accept='image/*,.pdf'; wsInput.id='ws-upload-'+fbKey; wsInput.style.display='none';
+    wsInput.addEventListener('change', e => uploadMathsWorksheet(e, fbKey));
+    dropZone.addEventListener('click', () => wsInput.click());
+    container.appendChild(dropZone);
+    container.appendChild(wsInput);
+
+    // Preview if already uploaded
+    const existingFile = cfg.files && cfg.files[0];
+    if (existingFile) {
+      const prev = document.createElement('div');
+      prev.style.cssText = 'margin-top:8px;display:flex;align-items:center;gap:8px;padding:8px;background:#dcfce7;border-radius:8px';
+      prev.innerHTML = '<span style="font-size:18px">'+(existingFile.type==='pdf'?'📄':'🖼️')+'</span>'
+        +'<div style="flex:1;font-size:11px;font-weight:700;color:#065f46">'+existingFile.name+'</div>'
+        +'<button onclick="clearMathsWorksheet(\''+fbKey+'\')" style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer">✕ Remove</button>';
+      container.appendChild(prev);
+    } else {
+      const noFile = document.createElement('div');
+      noFile.id='ws-preview-'+fbKey;
+      noFile.style.cssText='margin-top:6px;font-size:11px;color:#94a3b8;text-align:center';
+      noFile.textContent='No worksheet uploaded yet';
+      container.appendChild(noFile);
+    }
+  }
+}
+
+function mkCfgRow(label) {
+  const row = document.createElement('div');
+  row.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:7px';
+  const lbl = document.createElement('div');
+  lbl.style.cssText='font-size:11px;font-weight:700;color:#6366f1;min-width:90px';
+  lbl.textContent=label;
+  row.appendChild(lbl);
+  return row;
+}
+
+function getMathsCfg(fbKey) {
+  // Read current config from DOM
+  const t = admTasks.find(x=>x.id===fbKey);
+  let cfg = {};
+  try { cfg = JSON.parse(t?.activity_content||'{}'); } catch(e) {}
+  return cfg;
+}
+
+async function saveMathsConfig(fbKey) {
+  const t = admTasks.find(x=>x.id===fbKey); if(!t) return;
+  let cfg = {};
+  try { cfg = JSON.parse(t.activity_content||'{}'); } catch(e) {}
+
+  const typeSel = document.getElementById('mtype-'+fbKey);
+  const type = typeSel ? typeSel.value : (cfg.mathsType||'daily-review');
+
+  if (type === 'daily-review' || type === 'challenge') {
+    cfg.mathsType = type;
+    cfg.year = document.getElementById('mcfg-year-'+fbKey)?.value || 'yr3';
+    cfg.topic = document.getElementById('mcfg-topic-'+fbKey)?.value || 'addition';
+    cfg.count = parseInt(document.getElementById('mcfg-count-'+fbKey)?.value||'10');
+    cfg.answerMode = document.getElementById('mcfg-mode-'+fbKey)?.value || 'mc';
+    // Store mode for detectTaskType
+    cfg.mode = cfg.answerMode === 'mc' ? 'maths-mc' : 'maths-quiz';
+    cfg.text = '';
+    cfg.files = [];
+  }
+
+  const db = await getDb();
+  await db.ref('tasks/'+fbKey).update({activity_content: JSON.stringify(cfg), updated_at: new Date().toISOString()});
+  t.activity_content = JSON.stringify(cfg);
+  showToast('Maths config saved ✓');
+}
+
+async function uploadMathsWorksheet(event, fbKey) {
+  const file = event.target.files[0]; if(!file) return;
+  const t = admTasks.find(x=>x.id===fbKey); if(!t) return;
+  let cfg = {};
+  try { cfg = JSON.parse(t.activity_content||'{}'); } catch(e) {}
+
+  showToast('Uploading worksheet…');
+  const reader = new FileReader();
+  reader.onload = async e => {
+    let data = e.target.result;
+    const ftype = file.type.startsWith('image/') ? 'image' : 'pdf';
+    if (ftype === 'image') data = await compressImage(data, 1200, 1600, 0.8);
+    cfg.mathsType = 'worksheet';
+    cfg.mode = 'maths-worksheet';
+    cfg.files = [{name: file.name, type: ftype, data, label: 'Worksheet'}];
+
+    const db = await getDb();
+    await db.ref('tasks/'+fbKey).update({activity_content: JSON.stringify(cfg), updated_at: new Date().toISOString()});
+    t.activity_content = JSON.stringify(cfg);
+    // Rebuild the config panel to show preview
+    buildMathsConfig(fbKey, cfg);
+    showToast('Worksheet uploaded ✓');
+  };
+  reader.readAsDataURL(file);
+  event.target.value='';
+}
+
+function clearMathsWorksheet(fbKey) {
+  const t = admTasks.find(x=>x.id===fbKey); if(!t) return;
+  let cfg = {};
+  try { cfg = JSON.parse(t.activity_content||'{}'); } catch(e) {}
+  cfg.files = [];
+  t.activity_content = JSON.stringify(cfg);
+  buildMathsConfig(fbKey, cfg);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MATHS STUDENT ACTIVITIES — 3-TYPE SYSTEM
+// ═══════════════════════════════════════════════════════════════
+
+let mrTask = null, mrQs = [], mrIdx = 0, mrCorrect = 0, mrMode = 'mc';
+
+function openMathsReview(task) {
+  let cfg = {};
+  try { cfg = JSON.parse(task.activityContent||'{}'); } catch(e){}
+  mrTask = task;
+  mrIdx = 0;
+  mrCorrect = 0;
+  mrMode = cfg.answerMode || (cfg.mode === 'maths-mc' ? 'mc' : 'typed');
+
+  // Generate questions from bank
+  const year = cfg.year || 'yr3';
+  const topic = cfg.topic || 'addition';
+  const count = cfg.count || 10;
+  const allQs = getMathsQuestions(topic, year, 100);
+  if (!allQs.length) {
+    showToast('No questions found — check task config'); return;
+  }
+  mrQs = allQs.slice(0, count);
+
+  setView('mr-activity');
+  document.getElementById('mr-title').textContent = task.name;
+  document.getElementById('mr-total').textContent = count;
+  document.getElementById('mr-xp').textContent = '+' + task.xp + ' XP';
+  renderMRQuestion();
+}
+
+function renderMRQuestion() {
+  const q = mrQs[mrIdx];
+  if (!q) { mrFinish(); return; }
+
+  // Progress
+  document.getElementById('mr-prog-num').textContent = (mrIdx+1) + ' / ' + mrQs.length;
+  const pct = Math.round((mrIdx/mrQs.length)*100);
+  document.getElementById('mr-prog-bar').style.width = pct+'%';
+
+  document.getElementById('mr-q-text').textContent = q.q;
+  document.getElementById('mr-feedback').textContent = '';
+  document.getElementById('mr-feedback').className = 'ma-feedback';
+  document.getElementById('mr-next-btn').style.display = 'none';
+
+  if (mrMode === 'mc') {
+    document.getElementById('mr-mc-wrap').style.display = 'grid';
+    document.getElementById('mr-typed-wrap').style.display = 'none';
+    const opts = shuffleArr([q.a, ...generateWrongAnswers(q.a, q.q)]);
+    const wrap = document.getElementById('mr-mc-wrap');
+    wrap.innerHTML = '';
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'ma-opt-btn';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => mrCheckMC(btn, opt, q.a, wrap));
+      wrap.appendChild(btn);
+    });
+  } else {
+    document.getElementById('mr-mc-wrap').style.display = 'none';
+    document.getElementById('mr-typed-wrap').style.display = 'block';
+    const inp = document.getElementById('mr-ans-inp');
+    inp.value = '';
+    inp.focus();
+    // Clear working canvas
+    const wc = document.getElementById('mr-work-canvas');
+    if (wc) { const ctx=wc.getContext('2d'); ctx.clearRect(0,0,wc.width,wc.height); }
+    document.getElementById('mr-submit-ans').onclick = () => mrCheckTyped(q.a);
+    inp.onkeydown = e => { if(e.key==='Enter') mrCheckTyped(q.a); };
+  }
+}
+
+function mrCheckMC(btn, chosen, correct, wrap) {
+  const isRight = chosen.trim() === correct.trim();
+  if (isRight) mrCorrect++;
+  wrap.querySelectorAll('.ma-opt-btn').forEach(b => {
+    b.disabled = true;
+    if (b.textContent.trim() === correct.trim()) b.classList.add('correct');
+    else if (b === btn && !isRight) b.classList.add('wrong');
+  });
+  const fb = document.getElementById('mr-feedback');
+  fb.textContent = isRight ? '✓ Correct!' : '✗ The answer is ' + correct;
+  fb.className = 'ma-feedback ' + (isRight ? 'correct' : 'wrong');
+  setTimeout(() => mrAdvance(), isRight ? 900 : 1800);
+}
+
+function mrCheckTyped(correct) {
+  const inp = document.getElementById('mr-ans-inp');
+  const val = inp.value.trim();
+  if (!val) { showToast('Type your answer first!'); return; }
+  const isRight = val.toLowerCase() === correct.toString().toLowerCase()
+    || parseFloat(val) === parseFloat(correct);
+  if (isRight) mrCorrect++;
+  const fb = document.getElementById('mr-feedback');
+  fb.textContent = isRight ? '✓ Correct!' : '✗ Answer: ' + correct;
+  fb.className = 'ma-feedback ' + (isRight ? 'correct' : 'wrong');
+  inp.disabled = true;
+  document.getElementById('mr-submit-ans').disabled = true;
+  document.getElementById('mr-next-btn').style.display = 'block';
+}
+
+function mrAdvance() {
+  mrIdx++;
+  if (mrIdx >= mrQs.length) { mrFinish(); return; }
+  renderMRQuestion();
+}
+
+function mrFinish() {
+  // Award XP and mark task done
+  const pct = Math.round((mrCorrect/mrQs.length)*100);
+  const passed = pct >= 60;
+  if (passed && mrTask) {
+    completeTask(mrTask);
+  }
+  setView('mr-finish');
+  document.getElementById('mrf-score').textContent = mrCorrect + ' / ' + mrQs.length;
+  document.getElementById('mrf-pct').textContent = pct + '%';
+  document.getElementById('mrf-msg').textContent = pct>=80 ? '🌟 Excellent work!' : pct>=60 ? '✅ Well done!' : '💪 Keep practising!';
+  document.getElementById('mrf-xp').textContent = passed ? '+' + (mrTask?.xp||25) + ' XP earned!' : 'Keep practising to earn XP!';
+}
+
+function openMathsWorksheetActivity(task) {
+  let cfg = {};
+  try { cfg = JSON.parse(task.activityContent||'{}'); } catch(e){}
+  const files = cfg.files || [];
+
+  setView('mws-activity');
+  document.getElementById('mws-title').textContent = task.name;
+  document.getElementById('mws-xp').textContent = '+' + task.xp + ' XP';
+  const xpBtn=document.getElementById('mws-xp-btn');if(xpBtn)xpBtn.textContent=task.xp||25;
+
+  const wsImg = document.getElementById('mws-sheet-img');
+  const wsPDF = document.getElementById('mws-sheet-pdf');
+
+  if (files.length && files[0]) {
+    const f = files[0];
+    if (f.type === 'pdf') {
+      wsImg.style.display = 'none'; wsPDF.style.display = 'block';
+      wsPDF.src = f.data;
+    } else {
+      wsPDF.style.display = 'none'; wsImg.style.display = 'block';
+      wsImg.src = f.data;
+      wsImg.onload = () => {
+        initMWSCanvas(wsImg);
+        // Size canvas to match image
+        const mwsDC=document.getElementById('mws-draw-canvas');
+        if(mwsDC){mwsDC.width=wsImg.naturalWidth||wsImg.clientWidth;mwsDC.height=wsImg.naturalHeight||wsImg.clientHeight;}
+      };
+    }
+  } else {
+    wsImg.style.display = 'none'; wsPDF.style.display = 'none';
+    document.getElementById('mws-no-sheet').style.display = 'block';
+  }
+
+  // Clear working area
+  document.getElementById('mws-notes').value = '';
+  const wc = document.getElementById('mws-draw-canvas');
+  if (wc) { const ctx=wc.getContext('2d'); ctx.clearRect(0,0,wc.width,wc.height); }
+
+  document.getElementById('mws-submit').onclick = () => submitMathsWorksheet(task);
+}
+
+function initMWSCanvas(img) {
+  const canvas = document.getElementById('mws-draw-canvas');
+  if (!canvas) return;
+  canvas.width = img.naturalWidth || img.clientWidth;
+  canvas.height = img.naturalHeight || img.clientHeight;
+  canvas.style.width = '100%';
+  setupDrawCanvas(canvas, 'mws-pen-color', 'mws-pen-size', 'mws-eraser-btn', 'mws-clear-btn');
+}
+
+function setupDrawCanvas(canvas, colorId, sizeId, eraserBtnId, clearBtnId) {
+  const ctx = canvas.getContext('2d');
+  let drawing=false, erasing=false, lastX=0, lastY=0;
+  function getPos(e) {
+    const r=canvas.getBoundingClientRect();
+    const scaleX=canvas.width/r.width, scaleY=canvas.height/r.height;
+    const src=e.touches?e.touches[0]:e;
+    return [(src.clientX-r.left)*scaleX,(src.clientY-r.top)*scaleY];
+  }
+  function start(e){e.preventDefault();drawing=true;[lastX,lastY]=getPos(e);}
+  function move(e){
+    e.preventDefault();if(!drawing)return;
+    const [x,y]=getPos(e);
+    ctx.globalCompositeOperation=erasing?'destination-out':'source-over';
+    ctx.strokeStyle=erasing?'rgba(0,0,0,1)':(document.getElementById(colorId)?.value||'#2563eb');
+    ctx.lineWidth=erasing?20:parseInt(document.getElementById(sizeId)?.value||'3');
+    ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();
+    [lastX,lastY]=[x,y];
+  }
+  function end(){drawing=false;}
+  canvas.addEventListener('mousedown',start);canvas.addEventListener('mousemove',move);
+  canvas.addEventListener('mouseup',end);canvas.addEventListener('mouseleave',end);
+  canvas.addEventListener('touchstart',start,{passive:false});
+  canvas.addEventListener('touchmove',move,{passive:false});
+  canvas.addEventListener('touchend',end);
+  const eraserBtn=document.getElementById(eraserBtnId);
+  if(eraserBtn)eraserBtn.addEventListener('click',()=>{erasing=!erasing;eraserBtn.textContent=erasing?'✏️ Pen':'🧹 Erase';eraserBtn.style.background=erasing?'#fef3c7':'#f1f5f9';});
+  const clearBtn=document.getElementById(clearBtnId);
+  if(clearBtn)clearBtn.addEventListener('click',()=>ctx.clearRect(0,0,canvas.width,canvas.height));
+}
+
+async function submitMathsWorksheet(task) {
+  const notes = document.getElementById('mws-notes')?.value||'';
+  const canvas = document.getElementById('mws-draw-canvas');
+  const annotation = canvas ? canvas.toDataURL('image/png',0.8) : '';
+  try {
+    const db = await getDb();
+    await db.ref('tasks/'+task.id).update({
+      progress: task.steps, done: true,
+      saved_writing: notes, annotation,
+      submitted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+    completeTask(task);
+    showMain();
+    showToast('Worksheet submitted ✓ +'+task.xp+' XP!');
+  } catch(e) { showToast('Error: '+e.message); }
+}
+
+function shuffleArr(arr) { return [...arr].sort(()=>Math.random()-0.5); }
+
+// completeTask helper (awards XP, marks done in state)
+function completeTask(task) {
+  if (!task) return;
+  state.xp = (state.xp||0) + (task.xp||0);
+  renderXP();
+  // Update Firebase
+  getDb().then(db => {
+    db.ref('tasks/'+task.id).update({done:true, progress:task.steps||1, updated_at:new Date().toISOString()});
+    db.ref('quest_state').update({xp:state.xp, updated_at:new Date().toISOString()});
+  });
+  // Update local state
+  Object.values(state.tasks).forEach(arr => {
+    const t = arr.find(x=>x.id===task.id);
+    if(t){t.done=true;t.progress=t.steps||1;}
+  });
+  renderAll();
+  showToast('+'+task.xp+' XP! 🌟');
+}
+
+
+// Init maths review drawing canvas on first load
+document.addEventListener('DOMContentLoaded', ()=>{
+  const wc = document.getElementById('mr-work-canvas');
+  if(wc) setupDrawCanvas(wc,'mr-pen-color','mr-pen-size','mr-eraser-btn','mr-clear-btn');
+});
 </script>
 </body>
 </html>
