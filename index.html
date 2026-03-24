@@ -2043,6 +2043,18 @@ function openMathsWritten(task) {
     };
   }
 }
+
+function openWsForFile(i) {
+  if (!window._waFiles || !window._waTask) return;
+  const task = window._waTask;
+  // Temporarily override wsData with this specific file
+  const file = window._waFiles[i];
+  const taskCopy = Object.assign({}, task);
+  taskCopy.wsData = null;
+  taskCopy.activityContent = JSON.stringify({files:[file]});
+  openWs(taskCopy);
+}
+
 function openWs(t) {
   state.wsTaskId = t.id;
   document.getElementById('ws-title').textContent = t.name;
@@ -2051,15 +2063,22 @@ function openWs(t) {
   wsPageIdx = 0;
   wsPages = [];
 
-  // Gather all image sources: wsData (legacy), activityContent images
-  if (t.wsData) wsPages.push(t.wsData);
-
-  // Also check activityContent for embedded images
+  // Gather pages from all sources
+  if (t.wsData) wsPages.push({name:'Worksheet', type:'image', data:t.wsData});
   if (t.activityContent) {
     try {
       const parsed = JSON.parse(t.activityContent);
-      if (parsed.images && parsed.images.length) {
-        parsed.images.forEach(img => wsPages.push(img.data));
+      // New unified format: files array
+      if (parsed.files && parsed.files.length) {
+        parsed.files.forEach(f => wsPages.push(f));
+      }
+      // Legacy: images array
+      else if (parsed.images && parsed.images.length) {
+        parsed.images.forEach(img => wsPages.push({name:img.name||'Image',type:'image',data:img.data}));
+      }
+      // Legacy: promptFile
+      else if (parsed.promptFile) {
+        wsPages.push({name:'Prompt',type:'file',data:parsed.promptFile});
       }
     } catch(e) {}
   }
@@ -2080,9 +2099,10 @@ function loadWsPage(idx) {
     wsAnnotations[wsPageIdx] = canvas.toDataURL();
   }
   wsPageIdx = idx;
-  const src = wsPages[idx];
+  const pageObj = wsPages[idx]; // {name, type, data} or null
+  const src = pageObj ? pageObj.data : null;
 
-  if (src) {
+  if (src && (pageObj.type === 'image' || (pageObj.type !== 'pdf' && src.startsWith('data:image')))) {
     const img = new Image();
     img.onload = () => {
       canvas.width = img.naturalWidth;
@@ -2090,7 +2110,6 @@ function loadWsPage(idx) {
       canvas.style.width = '100%';
       wsCtx = canvas.getContext('2d');
       wsCtx.drawImage(img, 0, 0);
-      // Restore annotation for this page
       if (wsAnnotations[idx]) {
         const a = new Image();
         a.onload = () => wsCtx.drawImage(a, 0, 0);
@@ -2099,6 +2118,9 @@ function loadWsPage(idx) {
       initWsEv(canvas);
     };
     img.src = src;
+  } else if (src && (pageObj.type === 'pdf' || src.startsWith('data:application/pdf'))) {
+    // Render PDF page
+    wsLoadPdfPage(src, canvas).then(() => initWsEv(canvas));
   } else {
     // Blank canvas
     const W = canvas.offsetWidth || 360;
@@ -2120,9 +2142,33 @@ function updateWsNav() {
   }
   if (wsPages.length <= 1) { nav.style.display = 'none'; return; }
   nav.style.display = 'flex';
+  const cur = wsPages[wsPageIdx];
+  const label = cur ? (cur.label || cur.name || ('Page '+(wsPageIdx+1))) : ('Page '+(wsPageIdx+1));
   nav.innerHTML = '<button onclick="wsPagePrev()" style="padding:5px 12px;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">← Prev</button>'
-    + '<span style="font-size:12px;font-weight:700;color:#64748b">Page ' + (wsPageIdx+1) + ' of ' + wsPages.length + '</span>'
+    + '<span style="font-size:12px;font-weight:700;color:#334155;flex:1;text-align:center">'+label+' <span style="color:#94a3b8;font-weight:500">('+( wsPageIdx+1)+'/'+wsPages.length+')</span></span>'
     + '<button onclick="wsPageNext()" style="padding:5px 12px;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Next →</button>';
+}
+
+
+async function wsLoadPdfPage(dataUrl, canvas) {
+  if (!window.pdfjsLib) {
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';res();};
+      s.onerror=rej;document.head.appendChild(s);
+    });
+  }
+  const base64 = dataUrl.split(',')[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+  const pdf = await window.pdfjsLib.getDocument({data:bytes}).promise;
+  const page = await pdf.getPage(1);
+  const vp = page.getViewport({scale:1.8});
+  canvas.width=vp.width; canvas.height=vp.height; canvas.style.width='100%';
+  wsCtx = canvas.getContext('2d');
+  await page.render({canvasContext:wsCtx,viewport:vp}).promise;
 }
 
 function wsPagePrev() {
@@ -5464,16 +5510,27 @@ function openWritingActivity(task) {
   // Parse activityContent — supports: plain text, JSON {text, images, promptFile}
   let promptText = task.meta || 'Write your response below.';
   let teacherImages = [];
-  let promptFile = null; // base64 data URL for a file prompt
+  let promptFile = null;
+  let teacherFiles = []; // base64 data URL for a file prompt
 
   if (task.activityContent) {
     try {
       const parsed = JSON.parse(task.activityContent);
       if (parsed.text !== undefined) promptText = parsed.text || promptText;
-      if (parsed.images && parsed.images.length) teacherImages = parsed.images;
-      if (parsed.promptFile) promptFile = parsed.promptFile;
+      // New unified format
+      if (parsed.files && parsed.files.length) {
+        teacherImages = parsed.files.filter(f => f.type === 'image');
+        const pdfFile = parsed.files.find(f => f.type === 'pdf' || f.type === 'file');
+        if (pdfFile) promptFile = pdfFile.data;
+        // If multiple files, build a picker
+        if (parsed.files.length > 1) {
+          teacherFiles = parsed.files;
+        }
+      }
+      // Legacy formats
+      else if (parsed.images && parsed.images.length) teacherImages = parsed.images;
+      else if (parsed.promptFile) promptFile = parsed.promptFile;
     } catch(e) {
-      // plain string
       promptText = task.activityContent || promptText;
     }
   }
@@ -5521,6 +5578,24 @@ function openWritingActivity(task) {
         fileWrap.appendChild(img);
       }
     } else { fileWrap.style.display = 'none'; }
+  }
+
+
+  // File picker — if multiple files, show as a list Tom can choose from
+  if (teacherFiles.length > 1) {
+    const fw = document.getElementById('wa-prompt-file') || document.createElement('div');
+    fw.style.display = 'block';
+    fw.innerHTML = '<div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">📁 Files to work with</div>'
+      + teacherFiles.map((f,i) => {
+        const icon = f.type==='image'?'🖼️':f.type==='pdf'?'📄':'📎';
+        const label = f.label || f.name || ('File '+(i+1));
+        return '<button onclick="openWsForFile('+i+')" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e2e8f0;background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:6px;text-align:left">'
+          + icon + ' ' + label + '</button>';
+      }).join('');
+    document.getElementById('wa-images')?.after(fw);
+    // Store files for openWsForFile
+    window._waFiles = teacherFiles;
+    window._waTask = task;
   }
 
   // ── Writing area ─────────────────────────────────────────
