@@ -7506,12 +7506,12 @@ function admRenderTasks() {
 
       const cfgDiv=document.createElement('div');cfgDiv.id='maths-cfg-'+fbKey;
       card.appendChild(cfgDiv);
-      buildMathsConfig(fbKey, mcfg);
+      buildMathsConfig(fbKey, mcfg, cfgDiv);
 
       mtSel.addEventListener('change', ()=>{
         let c={};try{c=JSON.parse(admTasks.find(x=>x.id===fbKey)?.activity_content||'{}')}catch(e){}
         c.mathsType=mtSel.value;
-        buildMathsConfig(fbKey,c);
+        buildMathsConfig(fbKey,c,cfgDiv);
       });
     }
 
@@ -8762,9 +8762,9 @@ const MATHS_YEARS = [
 ];
 
 // Build the maths config panel inside a task card (called after type dropdown changes)
-function buildMathsConfig(fbKey, cfg) {
+function buildMathsConfig(fbKey, cfg, containerEl) {
   const type = cfg.mathsType || 'daily-review';
-  const container = document.getElementById('maths-cfg-'+fbKey);
+  const container = containerEl || document.getElementById('maths-cfg-'+fbKey);
   if (!container) return;
   container.innerHTML = '';
   container.style.cssText = 'margin-top:8px;padding:12px;background:#f8faff;border-radius:10px;border:1.5px solid #c7d2fe';
