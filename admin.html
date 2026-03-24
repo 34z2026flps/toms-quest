@@ -194,9 +194,9 @@ function rdTasks(){
     const div=document.createElement('div');div.className='tc';
     div.innerHTML=
       '<div class="thead"><span style="cursor:grab;color:#94a3b8;font-size:16px">☰</span><span class="spill">'+esc(t.subject)+'</span><span style="font-size:11px;font-weight:700;color:#94a3b8;flex:1">'+pct+'%'+(t.done?' ✓':'')+'</span>'
-      +'<button class="btn bg sm" style="padding:4px 7px" onclick="mv('+t.id+',-1)">↑</button>'
-      +'<button class="btn bg sm" style="padding:4px 7px;margin-right:3px" onclick="mv('+t.id+',1)">↓</button>'
-      +'<button class="btn br sm" onclick="del('+t.id+')">✕</button></div>'
+      +'<button class="btn bg sm" style="padding:4px 7px" onclick="mvT('+_getId(t.id)+',-1)">↑</button>'
+      +'<button class="btn bg sm" style="padding:4px 7px;margin-right:3px" onclick="mvT('+_getId(t.id)+',1)">↓</button>'
+      +'<button class="btn br sm" onclick="delT('+_getId(t.id)+')">✕</button></div>'
       +'<div class="fr"><div class="fl">Title</div><input class="fi" id="tn'+t.id+'" value="'+esc(t.name)+'"></div>'
       +'<div class="fr"><div class="fl">Details</div><input class="fi" id="tm'+t.id+'" value="'+esc(t.meta)+'"></div>'
       +'<div class="fr"><div class="fl">Subject</div>'
@@ -217,8 +217,8 @@ function rdTasks(){
       +'</div>'
       +'<div id="tpanel-text-'+t.id+'">'
       +'<div style="display:flex;gap:6px;margin-bottom:6px">'
-      +'<button onclick="openQBModal('+t.id+')" style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #c7d2fe;background:#f8faff;color:#4f46e5;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;text-align:left">📐 Maths Quiz Bank</button>'
-      +'<button onclick="insertFindSoundTemplate('+t.id+')" style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#065f46;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;text-align:left">🔍 Find the Sound template</button>'
+      +'<button onclick="openQBModalT('+_getId(t.id)+')" style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #c7d2fe;background:#f8faff;color:#4f46e5;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;text-align:left">📐 Maths Quiz Bank</button>'
+      +'<button onclick="insertFindSoundTemplateT('+_getId(t.id)+')" style="flex:1;padding:7px 10px;border-radius:8px;border:1.5px solid #d1fae5;background:#f0fdf4;color:#065f46;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;text-align:left">🔍 Find the Sound template</button>'
       +'</div>'
       +'<div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap">'
       +'<span style="font-size:10px;font-weight:700;color:#94a3b8;align-self:center;margin-right:2px">Prompt type:</span>'
@@ -251,7 +251,7 @@ function rdTasks(){
       +'<div style="font-size:20px;margin-bottom:4px">📁</div>'
       +'<div style="font-size:12px;font-weight:700;color:#4f46e5">Upload images, PDFs, Word docs (multiple OK)</div>'
       +'<div style="font-size:10px;color:#94a3b8;margin-top:2px">Add a label to each file so Tom knows what to open</div>'
-      +'<input type="file" id="imgup-'+t.id+'" accept="image/*,.pdf,.docx,.doc" multiple style="display:none" onchange="handleFileUpload(event,'+t.id+')">'
+      +'<input type="file" id="imgup-'+t.id+'" accept="image/*,.pdf,.docx,.doc" multiple style="display:none" onchange="handleFileUpload(event,taskIdFromNum('+_getId(t.id)+'))">'
       +'</div>'
       +'<div style="font-size:10px;color:#94a3b8;margin:5px 0 4px">💡 Ctrl+V to paste an image directly</div>'
       +'<div id="task-files-'+t.id+'"></div>'
@@ -259,8 +259,8 @@ function rdTasks(){
       +'<div id="tpanel-quiz-'+t.id+'" style="display:none">'
       +'<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">Build multiple choice questions:</div>'
       +'<div id="quiz-qs-'+t.id+'"><p style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">No questions yet</p></div>'
-      +'<button onclick="addQuizQ('+t.id+')" style="width:100%;padding:7px;border-radius:8px;border:1.5px dashed #c7d2fe;background:#f8faff;color:#4f46e5;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">+ Add question</button>'
-      +'<button onclick="quizToContent('+t.id+')" style="width:100%;padding:7px;border-radius:8px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px">✓ Apply quiz to task</button>'
+      +'<button onclick="addQuizQT('+_getId(t.id)+')" style="width:100%;padding:7px;border-radius:8px;border:1.5px dashed #c7d2fe;background:#f8faff;color:#4f46e5;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px">+ Add question</button>'
+      +'<button onclick="quizToContentT('+_getId(t.id)+')" style="width:100%;padding:7px;border-radius:8px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px">✓ Apply quiz to task</button>'
       +'</div>'
       +'</div>'
       // Sound / Spelling focus tab
@@ -271,14 +271,14 @@ function rdTasks(){
       +'<textarea class="fi" id="snd-text-'+t.id+'" placeholder="Paste the reading text here. Tom will tap the words that contain the focus sound." style="min-height:120px">'+esc(getSndText(t.activity_content||t.content||''))+'</textarea>'
       +'</div>'
       +'<div style="font-size:10px;color:#94a3b8;margin-bottom:8px">💡 Tip: use a decodable reader passage or any text with repeated examples of the focus spelling.</div>'
-      +'<button onclick="saveSoundTask('+t.id+')" style="width:100%;padding:9px;border-radius:9px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer">💾 Save sound activity</button>'
+      +'<button onclick="saveSoundTaskT('+_getId(t.id)+')" style="width:100%;padding:9px;border-radius:9px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer">💾 Save sound activity</button>'
       +'</div>'
       +'</div></div>'
       +'<div class="fr"><div class="fl">Min words</div><input class="fi num" type="number" id="tw'+t.id+'" value="'+(t.min_words||50)+'" title="Min words for writing tasks"></div>'
       +'<div class="fr" style="align-items:flex-start"><div class="fl">Unlocks</div><div><div style="display:flex;flex-wrap:wrap;gap:5px" id="tg'+t.id+'">'+gc+'</div><div style="font-size:10px;color:#94a3b8;margin-top:4px">Completing ALL tasks also unlocks everything.</div></div></div>'
       +'<div style="display:flex;gap:7px;margin-top:8px">'
-      +'<button class="btn bp sm" onclick="save('+t.id+')" style="flex:1">💾 Save task</button>'
-      +'<button class="btn sm" style="background:'+(t.done?'#dcfce7':'#f1f5f9')+';color:'+(t.done?'#16a34a':'#64748b')+'" onclick="tog('+t.id+')">'+(t.done?'✓ Done':'Mark done')+'</button>'
+      +'<button class="btn bp sm" onclick="saveT('+_getId(t.id)+')" style="flex:1">💾 Save task</button>'
+      +'<button class="btn sm" style="background:'+(t.done?'#dcfce7':'#f1f5f9')+';color:'+(t.done?'#16a34a':'#64748b')+'" onclick="togT('+_getId(t.id)+')">'+(t.done?'✓ Done':'Mark done')+'</button>'
       +'</div>';
     c.appendChild(div);
     initTaskFiles(t.id, t.activity_content||t.content||'');
@@ -373,7 +373,7 @@ function cpup(el,t){document.getElementById((t===0?'pimgup-':'pflup-')+el.datase
 function clickPromptUpload(id){document.getElementById(id).click();}
 function clickUpload(id){document.getElementById('imgup-'+id).click();}
 
-function stTab(btn){setTaskTab(parseInt(btn.dataset.tid),btn.dataset.tab);}
+function stTab(btn){setTaskTab(btn.dataset.tid,btn.dataset.tab);}
 function setTaskTab(taskId,tab){
   ['text','images','quiz','sound'].forEach(t=>{
     const p=document.getElementById('tpanel-'+t+'-'+taskId);
@@ -1201,6 +1201,29 @@ document.addEventListener('click', e => {
   const modal = document.getElementById('qb-modal');
   if (modal && e.target === modal) closeQBModal();
 });
+
+
+// Map Firebase string keys to short numeric aliases for onclick use
+const _idMap = {};
+let _idCounter = 1;
+function _getId(fbKey) {
+  if (!_idMap[fbKey]) _idMap[fbKey] = _idCounter++;
+  return _idMap[fbKey];
+}
+function taskIdFromNum(n) { return _getKey(n); }
+function _getKey(n) {
+  return Object.keys(_idMap).find(k => _idMap[k] === n) || n;
+}
+// Wrappers that accept either string key or numeric alias
+function delT(n) { del(_getKey(n)); }
+function togT(n) { tog(_getKey(n)); }
+function mvT(n,d) { mv(_getKey(n),d); }
+function saveT(n) { save(_getKey(n)); }
+function openQBModalT(n) { openQBModal(_getKey(n)); }
+function addQuizQT(n) { addQuizQ(_getKey(n)); }
+function quizToContentT(n) { quizToContent(_getKey(n)); }
+function saveSoundTaskT(n) { saveSoundTask(_getKey(n)); }
+function insertFindSoundTemplateT(n) { if(typeof insertFindSoundTemplate==='function') insertFindSoundTemplate(_getKey(n)); }
 
 </script>
 </body>
