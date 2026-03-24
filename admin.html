@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tom's Quest Admin</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,'Segoe UI',sans-serif;background:#f1f5f9;min-height:100vh;color:#1e293b}
@@ -136,19 +137,20 @@ select.fi{background:#fff}
 </div>
 
 <script>
-const SB_URL='https://qfjwwoxmnatfagqjkgpv.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmand3b3htbmF0ZmFncWprZ3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMzcyNTgsImV4cCI6MjA4OTgxMzI1OH0.4pGQPBwk9Off59LHHcPKzrSSDwINJcTv0EpGkbjH5Hc',PIN='2026';
+const FB_CONFIG={apiKey:"AIzaSyAaGLavGVohFtUIcUkOjWXaccbYp14xPZQ",authDomain:"toms-quest.firebaseapp.com",databaseURL:"https://toms-quest-default-rtdb.firebaseio.com",projectId:"toms-quest"};
+const PIN='2026';
 const DAYS=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],SUBJS=["Reading", "Maths", "Writing", "Spelling", "Science", "History", "Geography", "Video", "Worksheet", "Slides", "Other"],GAMES=[["math", "\u26a1", "Number Ninja"], ["tt", "\u2716\ufe0f", "Times Tables"], ["word", "\ud83d\udd2e", "Word Wizard"], ["bee", "\ud83d\udc1d", "Spelling Bee"], ["mem", "\ud83e\udde9", "Memory Match"], ["planet", "\ud83c\udf0d", "Planet Quiz"], ["sci", "\ud83d\udd2c", "Science Trivia"], ["story", "\ud83d\udc09", "Story Builder"], ["build", "\ud83c\udfd7\ufe0f", "Pixel Builder"], ["draw", "\ud83c\udfa8", "Art Studio"], ["code", "\ud83d\udcbb", "Code Quest"]];
 const XP_DEF={"Reading": 30, "Maths": 25, "Writing": 35, "Spelling": 25, "Science": 25, "History": 25, "Geography": 25, "Video": 20, "Worksheet": 30, "Slides": 20, "Other": 20},META_DEF={"Reading": "15 min read", "Maths": "10 questions", "Writing": "Write at least 50 words", "Spelling": "8 spelling words", "Science": "Answer the questions", "History": "Answer the questions", "Geography": "Answer the questions", "Video": "Watch then answer", "Worksheet": "Complete the worksheet", "Slides": "Read the slides", "Other": "Complete the task"};
-let db=null,day=(d=>d===0||d===6?0:d-1)(new Date().getDay()),tasks=[];
+let db=null,fbDb=null,day=(d=>d===0||d===6?0:d-1)(new Date().getDay()),tasks=[];
 
 window.addEventListener('load',async()=>{
   const err=document.getElementById('lerr');
   try{
-    for(let i=0;i<50;i++){if(window.supabase?.createClient)break;await delay(100);}
-    if(!window.supabase?.createClient)throw new Error('Supabase failed to load');
-    db=window.supabase.createClient(SB_URL,SB_KEY);
-    const{error}=await db.from('quest_state').select('id').eq('id','tom').single();
-    if(error&&error.code!=='PGRST116')throw new Error(error.message);
+    if(!window.firebase)throw new Error('Firebase failed to load');
+    if(!firebase.apps.length)firebase.initializeApp(FB_CONFIG);
+    fbDb=firebase.database();
+    db=fbDb; // alias so existing code works
+    await fbDb.ref('quest_state/xp').once('value');
     sw('scr-pin');document.getElementById('pin').focus();
   }catch(e){err.textContent=e.message;err.style.display='block';document.querySelector('#scr-load p:not(#lerr)').textContent='Connection failed';}
 });
@@ -161,9 +163,20 @@ function checkPin(){
 }
 
 async function loadAll(){try{await Promise.all([ldSt(),ldTasks(),ldMoods()]);setSt(true);}catch(e){setSt(false,e.message);}}
-async function ldSt(){const{data}=await db.from('quest_state').select('xp').eq('id','tom').single();if(data)document.getElementById('xpv').value=data.xp??0;}
-async function ldTasks(){const{data,error}=await db.from('tasks').select('*').order('id');if(error)throw error;tasks=data||[];rdTabs();rdTasks();rdWrite();}
-async function ldMoods(){const t=new Date().toISOString().split('T')[0];const{data}=await db.from('mood_log').select('*').gte('logged_at',t).order('logged_at');rdMoods(data||[]);}
+async function ldSt(){const snap=await fbDb.ref('quest_state/xp').once('value');const xp=snap.val();if(xp!==null)document.getElementById('xpv').value=xp;}
+async function ldTasks(){
+  const snap=await fbDb.ref('tasks').once('value');
+  const raw=snap.val()||{};
+  tasks=Object.entries(raw).map(([k,v])=>({...v,id:k})).sort((a,b)=>(a.order||0)-(b.order||0));
+  rdTabs();rdTasks();rdWrite();
+}
+async function ldMoods(){
+  const today=new Date().toISOString().split('T')[0];
+  const snap=await fbDb.ref('mood_log').once('value');
+  const raw=snap.val()||{};
+  const moods=Object.values(raw).filter(m=>m.logged_at&&m.logged_at.startsWith(today)).sort((a,b)=>a.logged_at>b.logged_at?1:-1);
+  rdMoods(moods);
+}
 
 function rdTabs(){const c=document.getElementById('dtabs');c.innerHTML='';DAYS.forEach((d,i)=>{const b=document.createElement('button');b.className='dtab'+(i===day?' on':'');b.textContent=d;b.onclick=()=>{flush();day=i;rdTabs();rdTasks();};c.appendChild(b);});}
 
@@ -320,24 +333,29 @@ function printDay(){
 }
 
 function flush(){tasks.filter(t=>t.day_index===day).forEach(t=>{const f=id=>document.getElementById(id+t.id)?.value;if(f('tn'))t.name=f('tn');if(f('tm'))t.meta=f('tm');if(f('ts'))t.subject=f('ts');if(f('tx'))t.xp=parseInt(f('tx'))||20;if(f('tstep'))t.steps=parseInt(f('tstep'))||1;if(f('tl'))t.link=f('tl');if(f('tc'))t.activity_content=f('tc');if(f('tw'))t.min_words=parseInt(f('tw'))||50;const g=document.getElementById('tg'+t.id);if(g)t.unlocks_games=Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid);});}
-async function saveXP(){const xp=parseInt(document.getElementById('xpv').value)||0;const{error}=await db.from('quest_state').update({xp,updated_at:new Date()}).eq('id','tom');error?toast('Error: '+error.message):toast('XP saved ✓');}
+async function saveXP(){const xp=parseInt(document.getElementById('xpv').value)||0;await fbDb.ref('quest_state').update({xp,updated_at:new Date().toISOString()});toast('XP saved ✓');}
 async function save(id){
   const f=fid=>document.getElementById(fid+id)?.value??'';
   const g=document.getElementById('tg'+id);
   const ug=g?Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid):[];
   const cv=buildTaskContent(id);
-  const u={name:f('tn'),meta:f('tm'),subject:f('ts'),xp:parseInt(f('tx'))||20,steps:parseInt(f('tstep'))||1,link:f('tl'),activity_content:cv,min_words:parseInt(f('tw'))||50,unlocks_games:ug,updated_at:new Date()};
-  const{error}=await db.from('tasks').update(u).eq('id',id);
-  if(error){toast('Error: '+error.message);return;}
+  const u={name:f('tn'),meta:f('tm'),subject:f('ts'),xp:parseInt(f('tx'))||20,steps:parseInt(f('tstep'))||1,link:f('tl'),activity_content:cv,min_words:parseInt(f('tw'))||50,unlocks_games:ug,updated_at:new Date().toISOString()};
+  await fbDb.ref('tasks/'+id).update(u);
   Object.assign(tasks.find(t=>t.id===id)||{},u);
   toast('Saved ✓');
 }
 
-async function addTask(){flush();const sub=document.getElementById('nsub').value;const nel=document.getElementById('nnm');const nm=nel.value.trim()||sub+' task';const{data,error}=await db.from('tasks').insert({day_index:day,subject:sub,name:nm,meta:META_DEF[sub]||'Complete the task',xp:XP_DEF[sub]||20,steps:1,progress:0,done:false,link:'',activity_content:'',min_words:50,unlocks_games:[]}).select().single();if(error){toast('Error: '+error.message);return;}tasks.push(data);nel.value='';rdTasks();toast(sub+' task added!');}
-async function del(id){if(!confirm('Delete?'))return;flush();const{error}=await db.from('tasks').delete().eq('id',id);if(error){toast('Error: '+error.message);return;}tasks=tasks.filter(t=>t.id!==id);rdTasks();toast('Deleted');}
-async function tog(id){const t=tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;t.progress=t.done?t.steps:0;const{error}=await db.from('tasks').update({done:t.done,progress:t.progress,updated_at:new Date()}).eq('id',id);if(error){toast('Error: '+error.message);return;}rdTasks();toast(t.done?'Marked done ✓':'Unmarked');}
+async function addTask(){flush();const sub=document.getElementById('nsub').value;const nel=document.getElementById('nnm');const nm=nel.value.trim()||sub+' task';
+  const newTask={day_index:day,subject:sub,name:nm,meta:META_DEF[sub]||'Complete the task',xp:XP_DEF[sub]||20,steps:1,progress:0,done:false,link:'',activity_content:'',min_words:50,unlocks_games:[],updated_at:new Date().toISOString()};
+  const ref=await fbDb.ref('tasks').push(newTask);
+  tasks.push({...newTask,id:ref.key});
+  nel.value='';rdTasks();toast(sub+' task added!');
+}
+async function del(id){if(!confirm('Delete?'))return;flush();await fbDb.ref('tasks/'+id).remove();tasks=tasks.filter(t=>t.id!==id);rdTasks();toast('Deleted');}
+async function tog(id){const t=tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;t.progress=t.done?t.steps:0;await fbDb.ref('tasks/'+id).update({done:t.done,progress:t.progress,updated_at:new Date().toISOString()});rdTasks();toast(t.done?'Marked done ✓':'Unmarked');}
 function mv(id,dir){flush();const list=tasks.filter(t=>t.day_index===day);const idx=list.findIndex(t=>t.id===id);const ni=idx+dir;if(ni<0||ni>=list.length)return;const ai=tasks.indexOf(list[idx]),bi=tasks.indexOf(list[ni]);[tasks[ai],tasks[bi]]=[tasks[bi],tasks[ai]];rdTasks();}
-async function resetDay(){if(!confirm('Reset all progress for '+DAYS[day]+'?'))return;const ids=tasks.filter(t=>t.day_index===day).map(t=>t.id);if(!ids.length){toast('No tasks');return;}const{error}=await db.from('tasks').update({progress:0,done:false,saved_writing:'',submitted_at:'',updated_at:new Date()}).in('id',ids);if(error){toast('Error: '+error.message);return;}tasks.forEach(t=>{if(t.day_index===day){t.progress=0;t.done=false;t.saved_writing='';t.submitted_at='';}});rdTasks();toast('Day reset ✓');}
+async function resetDay(){if(!confirm('Reset all progress for '+DAYS[day]+'?'))return;const ids=tasks.filter(t=>t.day_index===day).map(t=>t.id);if(!ids.length){toast('No tasks');return;}const updates={};ids.forEach(id=>{updates[id]={progress:0,done:false,saved_writing:'',submitted_at:'',updated_at:new Date().toISOString()};});await fbDb.ref('tasks').update(Object.fromEntries(Object.entries(updates).map(([k,v])=>[k+'/progress',0].concat())));// update each
+for(const id of ids){await fbDb.ref('tasks/'+id).update({progress:0,done:false,saved_writing:'',submitted_at:'',updated_at:new Date().toISOString()});}tasks.forEach(t=>{if(t.day_index===day){t.progress=0;t.done=false;t.saved_writing='';t.submitted_at='';}});rdTasks();toast('Day reset ✓');}
 
 
 
@@ -391,8 +409,7 @@ async function saveSoundTask(taskId) {
   const tc = document.getElementById('tc'+taskId);
   if (tc) tc.value = content;
   // Save to DB
-  const { error } = await db.from('tasks').update({ activity_content:content, updated_at:new Date() }).eq('id',taskId);
-  if (error) { toast('Error: '+error.message); return; }
+  await fbDb.ref('tasks/'+taskId).update({ activity_content:content, updated_at:new Date().toISOString() });
   const t = tasks.find(x=>x.id===taskId);
   if (t) t.activity_content = content;
   toast('Sound activity saved ✓');
