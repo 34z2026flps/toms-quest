@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Tom's Quest Board</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
 /* Offline-safe font stack — no internet required */
 :root { --app-font: 'Nunito', 'Segoe UI', 'SF Pro Rounded', -apple-system, 'Ubuntu', sans-serif; }
@@ -4169,125 +4170,119 @@ function loadQBankQ() {
 // ═══════════════════════════════════════════════════════
 // SUPABASE SYNC
 // ═══════════════════════════════════════════════════════
-let sbClient = null;
+let fbDb = null;
 
-async function initSupabase() {
+async function initFirebase() {
   try {
-    for (let i=0;i<50;i++) {
-      if (window.supabase && window.supabase.createClient) break;
-      await new Promise(r=>setTimeout(r,100));
-    }
-    if (!window.supabase || !window.supabase.createClient) throw new Error('Library not loaded');
-    sbClient = window.supabase.createClient('https://qfjwwoxmnatfagqjkgpv.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmand3b3htbmF0ZmFncWprZ3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMzcyNTgsImV4cCI6MjA4OTgxMzI1OH0.4pGQPBwk9Off59LHHcPKzrSSDwINJcTv0EpGkbjH5Hc');
-    await sbLoadAll();
-    setInterval(async()=>{
-      await sbLoadTasks();
+    if (!window.firebase) throw new Error('Firebase library not loaded');
+    if (!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    fbDb = firebase.database();
+    await fbDb.ref('quest_state/xp').once('value');
+    await fbLoadAll();
+    fbDb.ref('tasks').on('value', snap => {
+      fbProcessTasks(snap.val() || {});
       renderAll();
       renderMonsterHUD();
-    }, 15000);
+    });
     return true;
   } catch(e) {
-    console.warn('Supabase error:', e.message);
+    console.warn('Firebase error:', e.message);
     return false;
   }
 }
 
-async function sbLoadAll() {
-  if (!sbClient) return;
+async function fbLoadAll() {
+  if (!fbDb) return;
   try {
-    const {data:st} = await sbClient.from('quest_state').select('*').eq('id','tom').single();
+    const snap = await fbDb.ref('quest_state').once('value');
+    const st = snap.val();
     if (st) {
       state.xp = st.xp || state.xp;
       if (st.avatar && Object.keys(st.avatar).length) state.avatar = {...state.avatar,...st.avatar};
-      if (st.owned_items && st.owned_items.length) {
-        state.ownedItems = new Set(st.owned_items);
-        // Always ensure free items are owned
-        AV_CATALOGUE.filter(x=>x.cost===0&&x.milestoneXP===0).forEach(x=>state.ownedItems.add(x.id));
-      }
+      if (st.owned_items && st.owned_items.length) state.ownedItems = new Set(st.owned_items);
       if (st.home_layout) state.homeLayout = st.home_layout;
       if (st.monster_collection) monsterState.collection = st.monster_collection;
       if (st.active_monster_id) monsterState.activeMonsterId = st.active_monster_id;
       if (st.monster_packs !== undefined) monsterState.packs = st.monster_packs;
       if (st.starter_chosen !== undefined) monsterState.starterChosen = st.starter_chosen;
     }
-    await sbLoadTasks();
-  } catch(e) { console.warn('sbLoadAll:', e.message); }
+    const taskSnap = await fbDb.ref('tasks').once('value');
+    fbProcessTasks(taskSnap.val() || {});
+  } catch(e) { console.warn('fbLoadAll:', e.message); }
 }
 
-async function sbLoadTasks() {
-  if (!sbClient) return;
-  try {
-    const {data} = await sbClient.from('tasks').select('*').order('id');
-    if (!data) return;
-    const today = new Date().toDateString();
-    const newTasks = {0:[],1:[],2:[],3:[],4:[]};
-    data.forEach(t => {
-      if (t.day_index < 0 || t.day_index > 4) return;
-      const isNewDay = t.updated_at && new Date(t.updated_at).toDateString() !== today && t.done;
-      newTasks[t.day_index].push({
-        id: t.id,
-        subject: t.subject || 'Other',
-        name: t.name || 'Task',
-        meta: t.meta || '',
-        xp: t.xp || 20,
-        steps: t.steps || 1,
-        progress: isNewDay ? 0 : (t.progress || 0),
-        done: isNewDay ? false : (t.done || false),
-        link: t.link || '',
-        wsData: '',
-        gateSession: '',
-        unlocksGames: t.unlocks_games || [],
-        activityContent: t.activity_content || '',
-        minWords: t.min_words || 50,
-        savedWriting: isNewDay ? '' : (t.saved_writing || ''),
-        writingSubmittedAt: isNewDay ? '' : (t.submitted_at || ''),
-        videoAnswers: [],
-        annotation: '',
-      });
+function fbProcessTasks(tasksObj) {
+  const today = new Date().toDateString();
+  const newTasks = {0:[],1:[],2:[],3:[],4:[]};
+  Object.entries(tasksObj).forEach(([fbKey, t]) => {
+    if (!t || t.day_index < 0 || t.day_index > 4) return;
+    const isNewDay = t.updated_at && new Date(t.updated_at).toDateString() !== today && t.done;
+    newTasks[t.day_index].push({
+      id: fbKey,
+      subject: t.subject || 'Other',
+      name: t.name || 'Task',
+      meta: t.meta || '',
+      xp: t.xp || 20,
+      steps: t.steps || 1,
+      progress: isNewDay ? 0 : (t.progress || 0),
+      done: isNewDay ? false : (t.done || false),
+      link: t.link || '',
+      wsData: '',
+      gateSession: '',
+      unlocksGames: t.unlocks_games || [],
+      activityContent: t.activity_content || '',
+      minWords: t.min_words || 50,
+      savedWriting: isNewDay ? '' : (t.saved_writing || ''),
+      writingSubmittedAt: isNewDay ? '' : (t.submitted_at || ''),
+      videoAnswers: [],
+      annotation: '',
     });
-    state.tasks = newTasks;
-  } catch(e) { console.warn('sbLoadTasks:', e.message); }
+  });
+  Object.values(newTasks).forEach(arr => arr.sort((a,b)=>(a.order||0)-(b.order||0)));
+  state.tasks = newTasks;
 }
 
 async function sbSaveState() {
-  if (!sbClient) return;
+  if (!fbDb) return;
   try {
-    await sbClient.from('quest_state').upsert({
-      id: 'tom', xp: state.xp,
+    await fbDb.ref('quest_state').update({
+      xp: state.xp,
       avatar: state.avatar,
       owned_items: Array.from(state.ownedItems),
-      home_layout: state.homeLayout,
-      monster_collection: monsterState.collection,
-      active_monster_id: monsterState.activeMonsterId,
-      monster_packs: monsterState.packs,
-      starter_chosen: monsterState.starterChosen,
-      updated_at: new Date(),
+      home_layout: state.homeLayout || [],
+      monster_collection: monsterState.collection || {},
+      active_monster_id: monsterState.activeMonsterId || null,
+      monster_packs: monsterState.packs || 0,
+      starter_chosen: monsterState.starterChosen || false,
+      updated_at: new Date().toISOString(),
     });
-  } catch(e) { console.warn('sbSaveState:', e.message); }
+  } catch(e) { console.warn('fbSaveState:', e.message); }
 }
 
 async function sbSaveTask(task) {
-  if (!sbClient) return;
+  if (!fbDb) return;
   try {
-    await sbClient.from('tasks').update({
+    await fbDb.ref('tasks/' + task.id).update({
       progress: task.progress,
       done: task.done,
       saved_writing: task.savedWriting || '',
       submitted_at: task.writingSubmittedAt || '',
-      updated_at: new Date(),
-    }).eq('id', task.id);
-  } catch(e) { console.warn('sbSaveTask:', e.message); }
+      updated_at: new Date().toISOString(),
+    });
+  } catch(e) { console.warn('fbSaveTask:', e.message); }
 }
 
 async function sbSaveMood(entry) {
-  if (!sbClient) return;
+  if (!fbDb) return;
   try {
-    await sbClient.from('mood_log').insert({
+    await fbDb.ref('mood_log').push({
       mood: entry.label, emoji: entry.emoji,
-      is_alert: entry.alert, logged_at: new Date(),
+      is_alert: entry.alert || false,
+      logged_at: new Date().toISOString(),
     });
-  } catch(e) { console.warn('sbSaveMood:', e.message); }
+  } catch(e) { console.warn('fbSaveMood:', e.message); }
 }
+
 
 
 function showTaskReview(task) {
@@ -6734,7 +6729,7 @@ renderAll();
 renderMiniAvatar();
 startMoodTimer();
 // Load from Supabase
-initSupabase().then(connected => {
+initFirebase().then(connected => {
   if (connected) {
     renderAll();
     setTimeout(() => { renderMonsterHUD(); renderMiniAvatar(); }, 200);
