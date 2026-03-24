@@ -223,7 +223,7 @@ function rdTasks(){
       +'<input class="fi num" type="number" id="tx'+t.id+'" value="'+t.xp+'" title="XP">'
       +'<input class="fi num" type="number" id="tstep'+t.id+'" value="'+t.steps+'" title="Steps"></div>'
       +'<div class="fr"><div class="fl">Mode</div>'
-      +'<select class="fi" id="tmode'+t.id+'" style="max-width:220px" onchange="updateModeOpts('+t.id+')">'+getModeOpts(t.subject, t.task_mode||'')+"</select>"
+      +'<select class="fi" id="tmode'+t.id+'" style="max-width:220px" onchange="updateModeOpts('+t.id+')">'+getModeOpts(t.subject, getTaskMode(t))+"</select>"
       +'<span style="font-size:10px;color:#94a3b8;align-self:center;padding-left:6px">How Tom does this task</span></div>'
       +'<div class="fr"><div class="fl">Link</div><input class="fi" id="tl'+t.id+'" value="'+esc(t.link||'')+'" placeholder="YouTube / Google Slides URL"></div>'
       +'<div class="fr" style="align-items:flex-start"><div class="fl" style="padding-top:4px">Content</div><div style="flex:1">'
@@ -235,7 +235,31 @@ function rdTasks(){
       +'</div>'
       +'<div id="tpanel-text-'+t.id+'">'
       +'<button onclick="openQBModal('+t.id+')" style="display:block;width:100%;padding:7px 12px;border-radius:8px;border:1.5px solid #c7d2fe;background:#f8faff;color:#4f46e5;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer;margin-bottom:6px;text-align:left">📐 Maths Quiz Bank — tap to pick questions</button>'
-      +'<textarea class="fi" id="tc'+t.id+'" placeholder="Writing prompt / questions (Q|correct|opt|opt|opt) / spelling (word|hint)">'+esc(t.activity_content||t.content||'')+'</textarea>'
+      +'<div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap">'
+      +'<span style="font-size:10px;font-weight:700;color:#94a3b8;align-self:center;margin-right:2px">Prompt type:</span>'
+      +'<button class="tab-btn on" id="pt-text-'+t.id+'" data-tab="text" data-tid="'+t.id+'" onclick="setPromptType(this)">📝 Text</button>'
+      +'<button class="tab-btn" id="pt-image-'+t.id+'" data-tab="image" data-tid="'+t.id+'" onclick="setPromptType(this)">🖼️ Image</button>'
+      +'<button class="tab-btn" id="pt-file-'+t.id+'" data-tab="file" data-tid="'+t.id+'" onclick="setPromptType(this)">📄 File (PDF/DOCX)</button>'
+      +'</div>'
+      +'<div id="pp-text-'+t.id+'">'
+      +'<textarea class="fi" id="tc'+t.id+'" placeholder="Writing prompt / questions (Q|correct|opt|opt|opt) / spelling (word|hint)" style="min-height:80px">'+esc(getPromptText(t.activity_content||t.content||''))+'</textarea>'
+      +'</div>'
+      +'<div id="pp-image-'+t.id+'" style="display:none">'
+      +'<div style="background:#f8faff;border:2px dashed #c7d2fe;border-radius:10px;padding:12px;text-align:center;cursor:pointer" data-uid="'+t.id+'" onclick="cpup(this,0)">'
+      +'<div style="font-size:20px;margin-bottom:4px">🖼️</div>'
+      +'<div style="font-size:12px;font-weight:700;color:#4f46e5">Upload prompt image</div>'
+      +'<input type="file" id="pimgup-'+t.id+'" accept="image/*" style="display:none" data-tid="'+t.id+'" data-pt="image" onchange="handlePromptFile(event,this.dataset.tid,this.dataset.pt)">'
+      +'</div>'
+      +'<div id="pimg-thumb-'+t.id+'" style="margin-top:6px"></div>'
+      +'</div>'
+      +'<div id="pp-file-'+t.id+'" style="display:none">'
+      +'<div style="background:#f8faff;border:2px dashed #c7d2fe;border-radius:10px;padding:12px;text-align:center;cursor:pointer" data-uid="'+t.id+'" onclick="cpup(this,1)">'
+      +'<div style="font-size:20px;margin-bottom:4px">📄</div>'
+      +'<div style="font-size:12px;font-weight:700;color:#4f46e5">Upload PDF, DOCX or image as writing prompt</div>'
+      +'<input type="file" id="pflup-'+t.id+'" accept="image/*,.pdf,.docx,.doc" style="display:none" data-tid="'+t.id+'" data-pt="file" onchange="handlePromptFile(event,this.dataset.tid,this.dataset.pt)">'
+      +'</div>'
+      +'<div id="pfl-thumb-'+t.id+'" style="margin-top:6px"></div>'
+      +'</div>'
       +'</div>'
       +'<div id="tpanel-images-'+t.id+'" style="display:none">'
       +'<div style="background:#f8faff;border:2px dashed #c7d2fe;border-radius:10px;padding:12px;text-align:center;cursor:pointer" onclick="clickUpload('+t.id+')">'
@@ -315,10 +339,10 @@ function printDay(){
   w.document.close();w.print();
 }
 
-function flush(){tasks.filter(t=>t.day_index===day).forEach(t=>{const f=id=>document.getElementById(id+t.id)?.value;if(f('tn'))t.name=f('tn');if(f('tm'))t.meta=f('tm');if(f('ts'))t.subject=f('ts');if(f('tx'))t.xp=parseInt(f('tx'))||20;if(f('tstep'))t.steps=parseInt(f('tstep'))||1;if(f('tl'))t.link=f('tl');if(f('tc'))t.activity_content=f('tc');if(f('tw'))t.min_words=parseInt(f('tw'))||50;const g=document.getElementById('tg'+t.id);if(g)t.unlocks_games=Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid);const mo=document.getElementById('tmode'+t.id);if(mo)t.task_mode=mo.value;});}
+function flush(){tasks.filter(t=>t.day_index===day).forEach(t=>{const f=id=>document.getElementById(id+t.id)?.value;if(f('tn'))t.name=f('tn');if(f('tm'))t.meta=f('tm');if(f('ts'))t.subject=f('ts');if(f('tx'))t.xp=parseInt(f('tx'))||20;if(f('tstep'))t.steps=parseInt(f('tstep'))||1;if(f('tl'))t.link=f('tl');if(f('tc'))t.activity_content=f('tc');if(f('tw'))t.min_words=parseInt(f('tw'))||50;const g=document.getElementById('tg'+t.id);if(g)t.unlocks_games=Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid);});}
 async function saveXP(){const xp=parseInt(document.getElementById('xpv').value)||0;const{error}=await db.from('quest_state').update({xp,updated_at:new Date()}).eq('id','tom');error?toast('Error: '+error.message):toast('XP saved ✓');}
-async function save(id){const f=fid=>document.getElementById(fid+id)?.value??'';const g=document.getElementById('tg'+id);const ug=g?Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid):[];const imgs=taskImages[id];let cv=f('tc');if(imgs&&imgs.length)cv=JSON.stringify({text:f('tc'),images:imgs});const tm=document.getElementById('tmode'+id)?.value||'';const u={name:f('tn'),meta:f('tm'),subject:f('ts'),xp:parseInt(f('tx'))||20,steps:parseInt(f('tstep'))||1,link:f('tl'),activity_content:setMode(cv,tm),min_words:parseInt(f('tw'))||50,unlocks_games:ug,updated_at:new Date(),task_mode:tm};const{error}=await db.from('tasks').update(u).eq('id',id);error?toast('Error: '+error.message):(Object.assign(tasks.find(t=>t.id===id)||{},u),toast('Saved ✓'));}
-async function addTask(){flush();const sub=document.getElementById('nsub').value;const nel=document.getElementById('nnm');const nm=nel.value.trim()||sub+' task';const{data,error}=await db.from('tasks').insert({day_index:day,subject:sub,name:nm,meta:META_DEF[sub]||'Complete the task',xp:XP_DEF[sub]||20,steps:1,progress:0,done:false,link:'',activity_content:'',min_words:50,unlocks_games:[],task_mode:''}).select().single();if(error){toast('Error: '+error.message);return;}tasks.push(data);nel.value='';rdTasks();toast(sub+' task added!');}
+async function save(id){const f=fid=>document.getElementById(fid+id)?.value??'';const g=document.getElementById('tg'+id);const ug=g?Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid):[];const imgs=taskImages[id];const rawText=f('tc');const pf=promptFiles[id];let cv=rawText;if(imgs&&imgs.length||pf){const obj={text:rawText};if(imgs&&imgs.length)obj.images=imgs;if(pf)obj.promptFile=pf.data;cv=JSON.stringify(obj);}const tm=document.getElementById('tmode'+id)?.value||'';const u={name:f('tn'),meta:f('tm'),subject:f('ts'),xp:parseInt(f('tx'))||20,steps:parseInt(f('tstep'))||1,link:f('tl'),activity_content:setMode(cv,tm),min_words:parseInt(f('tw'))||50,unlocks_games:ug,updated_at:new Date()};const{error}=await db.from('tasks').update(u).eq('id',id);error?toast('Error: '+error.message):(Object.assign(tasks.find(t=>t.id===id)||{},u),toast('Saved ✓'));}
+async function addTask(){flush();const sub=document.getElementById('nsub').value;const nel=document.getElementById('nnm');const nm=nel.value.trim()||sub+' task';const{data,error}=await db.from('tasks').insert({day_index:day,subject:sub,name:nm,meta:META_DEF[sub]||'Complete the task',xp:XP_DEF[sub]||20,steps:1,progress:0,done:false,link:'',activity_content:'',min_words:50,unlocks_games:[]}).select().single();if(error){toast('Error: '+error.message);return;}tasks.push(data);nel.value='';rdTasks();toast(sub+' task added!');}
 async function del(id){if(!confirm('Delete?'))return;flush();const{error}=await db.from('tasks').delete().eq('id',id);if(error){toast('Error: '+error.message);return;}tasks=tasks.filter(t=>t.id!==id);rdTasks();toast('Deleted');}
 async function tog(id){const t=tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;t.progress=t.done?t.steps:0;const{error}=await db.from('tasks').update({done:t.done,progress:t.progress,updated_at:new Date()}).eq('id',id);if(error){toast('Error: '+error.message);return;}rdTasks();toast(t.done?'Marked done ✓':'Unmarked');}
 function mv(id,dir){flush();const list=tasks.filter(t=>t.day_index===day);const idx=list.findIndex(t=>t.id===id);const ni=idx+dir;if(ni<0||ni>=list.length)return;const ai=tasks.indexOf(list[idx]),bi=tasks.indexOf(list[ni]);[tasks[ai],tasks[bi]]=[tasks[bi],tasks[ai]];rdTasks();}
@@ -326,6 +350,8 @@ async function resetDay(){if(!confirm('Reset all progress for '+DAYS[day]+'?'))r
 
 
 
+function cpup(el,t){document.getElementById((t===0?'pimgup-':'pflup-')+el.dataset.uid).click();}
+function clickPromptUpload(id){document.getElementById(id).click();}
 function clickUpload(id){document.getElementById('imgup-'+id).click();}
 
 function stTab(btn){setTaskTab(parseInt(btn.dataset.tid),btn.dataset.tab);}
@@ -928,6 +954,50 @@ function setMode(actContent, mode) {
     // plain text content — wrap it
     return JSON.stringify({ mode: mode, text: actContent || '' });
   }
+}
+
+
+// ── PROMPT TYPE (for writing/reading tasks) ────────────────
+const promptFiles = {}; // {taskId: {type:'image'|'file', data:base64}}
+
+function getPromptText(ac) {
+  if (!ac) return '';
+  try { const p = JSON.parse(ac); return p.text || ''; } catch(e) { return ac; }
+}
+
+function setPromptType(btn) {
+  const tid = btn.dataset.tid;
+  const tab = btn.dataset.tab;
+  ['text','image','file'].forEach(t => {
+    const b = document.getElementById('pt-'+t+'-'+tid);
+    const p = document.getElementById('pp-'+t+'-'+tid);
+    if (b) b.className = 'tab-btn' + (t===tab?' on':'');
+    if (p) p.style.display = t===tab ? 'block' : 'none';
+  });
+}
+
+function handlePromptFile(event, taskId, type) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    promptFiles[taskId] = { type, data: e.target.result, name: file.name };
+    // Show thumbnail
+    const thumbId = type === 'image' ? 'pimg-thumb-'+taskId : 'pfl-thumb-'+taskId;
+    const thumb = document.getElementById(thumbId);
+    if (!thumb) return;
+    if (type === 'image') {
+      thumb.innerHTML = '<img src="'+e.target.result+'" style="max-height:100px;border-radius:8px;border:2px solid #e2e8f0">';
+    } else {
+      thumb.innerHTML = '<div style="background:#f8fafc;border-radius:8px;padding:8px 12px;border:1.5px solid #e2e8f0;font-size:12px;font-weight:700;color:#334155">📄 '+file.name+' attached</div>';
+    }
+    toast(file.name + ' ready ✓');
+  };
+  reader.readAsDataURL(file);
+}
+
+function getTaskMode(t) {
+  if (!t.activity_content) return '';
+  try { const p = JSON.parse(t.activity_content); return p.mode || ''; } catch(e) { return ''; }
 }
 
 function getModeOpts(subject, currentMode) {
