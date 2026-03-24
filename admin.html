@@ -332,7 +332,7 @@ function printDay(){
   w.document.close();w.print();
 }
 
-function flush(){tasks.filter(t=>t.day_index===day).forEach(t=>{const f=id=>document.getElementById(id+t.id)?.value;if(f('tn'))t.name=f('tn');if(f('tm'))t.meta=f('tm');if(f('ts'))t.subject=f('ts');if(f('tx'))t.xp=parseInt(f('tx'))||20;if(f('tstep'))t.steps=parseInt(f('tstep'))||1;if(f('tl'))t.link=f('tl');if(f('tc'))t.activity_content=f('tc');if(f('tw'))t.min_words=parseInt(f('tw'))||50;const g=document.getElementById('tg'+t.id);if(g)t.unlocks_games=Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid);});}
+function flush(){tasks.filter(t=>t.day_index===day).forEach(t=>{const tid=t.id;const f=id=>document.getElementById(id+tid)?.value;if(f('tn'))t.name=f('tn');if(f('tm'))t.meta=f('tm');if(f('ts'))t.subject=f('ts');if(f('tx'))t.xp=parseInt(f('tx'))||20;if(f('tstep'))t.steps=parseInt(f('tstep'))||1;if(f('tl'))t.link=f('tl');if(f('tc'))t.activity_content=f('tc');if(f('tw'))t.min_words=parseInt(f('tw'))||50;const g=document.getElementById('tg'+t.id);if(g)t.unlocks_games=Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid);});}
 async function saveXP(){const xp=parseInt(document.getElementById('xpv').value)||0;await fbDb.ref('quest_state').update({xp,updated_at:new Date().toISOString()});toast('XP saved ✓');}
 async function save(id){
   const f=fid=>document.getElementById(fid+id)?.value??'';
@@ -345,11 +345,21 @@ async function save(id){
   toast('Saved ✓');
 }
 
-async function addTask(){flush();const sub=document.getElementById('nsub').value;const nel=document.getElementById('nnm');const nm=nel.value.trim()||sub+' task';
-  const newTask={day_index:day,subject:sub,name:nm,meta:META_DEF[sub]||'Complete the task',xp:XP_DEF[sub]||20,steps:1,progress:0,done:false,link:'',activity_content:'',min_words:50,unlocks_games:[],updated_at:new Date().toISOString()};
-  const ref=await fbDb.ref('tasks').push(newTask);
-  tasks.push({...newTask,id:ref.key});
-  nel.value='';rdTasks();toast(sub+' task added!');
+async function addTask(){
+  const sub=document.getElementById('nsub').value;
+  const nel=document.getElementById('nnm');
+  const nm=nel.value.trim()||sub+' task';
+  const newTask={day_index:day,subject:sub,name:nm,meta:META_DEF[sub]||'Complete the task',
+    xp:XP_DEF[sub]||20,steps:1,progress:0,done:false,link:'',
+    activity_content:'',min_words:50,unlocks_games:[],
+    updated_at:new Date().toISOString()};
+  try {
+    const ref=await fbDb.ref('tasks').push(newTask);
+    tasks.push({...newTask,id:ref.key});
+    nel.value='';
+    rdTabs();rdTasks();rdWrite();
+    toast(sub+' task added!');
+  } catch(e) { toast('Error: '+e.message); }
 }
 async function del(id){if(!confirm('Delete?'))return;flush();await fbDb.ref('tasks/'+id).remove();tasks=tasks.filter(t=>t.id!==id);rdTasks();toast('Deleted');}
 async function tog(id){const t=tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;t.progress=t.done?t.steps:0;await fbDb.ref('tasks/'+id).update({done:t.done,progress:t.progress,updated_at:new Date().toISOString()});rdTasks();toast(t.done?'Marked done ✓':'Unmarked');}
