@@ -7238,7 +7238,20 @@ function getTaskContent(ac) {
 function buildTaskContent(taskId) {
   const tc=document.getElementById('tc'+taskId);
   const tm=document.getElementById('tmode'+taskId)?.value||'';
-  const text=tc?tc.value:''; const files=taskFiles[taskId]||[];
+  const text=tc?tc.value:'';
+  const files=taskFiles[taskId]||[];
+  // If this is a Maths task with saved config, preserve the maths config JSON
+  const t=admTasks.find(x=>x.id===taskId);
+  if(t && t.subject==='Maths') {
+    let existing={};
+    try{existing=JSON.parse(t.activity_content||'{}');}catch(e){}
+    if(existing.mathsType) {
+      // Preserve maths config, just update text if changed
+      if(text && text!==existing.text) existing.text=text;
+      if(files.length) existing.files=files;
+      return JSON.stringify(existing);
+    }
+  }
   if(!tm&&!files.length)return text;
   const obj={};if(tm)obj.mode=tm;if(text)obj.text=text;if(files.length)obj.files=files;
   return JSON.stringify(obj);
@@ -7717,9 +7730,15 @@ async function admSave(fbKey) {
   const f = fid => document.getElementById(fid+fbKey)?.value ?? '';
   const g = document.getElementById('tg'+fbKey);
   const ug = g ? Array.from(g.querySelectorAll('input:checked')).map(cb => cb.value) : [];
+  const subject = f('ts');
+  // For Maths tasks: save the maths config into activity_content first
+  if (subject === 'Maths' && document.getElementById('mtype-'+fbKey)) {
+    await saveMathsConfig(fbKey);
+  }
+  // Re-read activity_content from updated admTask (saveMathsConfig may have changed it)
   const cv = buildTaskContent(fbKey);
   const u = {
-    name: f('tn'), meta: f('tm'), subject: f('ts'),
+    name: f('tn'), meta: f('tm'), subject,
     xp: parseInt(f('tx'))||20, steps: parseInt(f('tstep'))||1,
     link: f('tl'), activity_content: cv,
     min_words: parseInt(f('tw'))||50, unlocks_games: ug,
@@ -8881,6 +8900,11 @@ async function saveMathsConfig(fbKey) {
     cfg.mode = cfg.answerMode === 'mc' ? 'maths-mc' : 'maths-quiz';
     cfg.text = '';
     cfg.files = [];
+    // Update steps to match question count so progress bar works
+    const db2 = await getDb();
+    await db2.ref('tasks/'+fbKey).update({steps: cfg.count, updated_at: new Date().toISOString()});
+    const tRef = admTasks.find(x=>x.id===fbKey);
+    if(tRef) tRef.steps = cfg.count;
   }
 
   const db = await getDb();
