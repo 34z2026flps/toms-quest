@@ -2003,6 +2003,44 @@ let wsCtx,wsDrawing=false,wsTool='pen',wsColor='#4f46e5';
 // Worksheet pages for multi-page support
 let wsPages = [], wsPageIdx = 0, wsAnnotations = {};
 
+
+// ── MATHS WRITTEN MODE ────────────────────────────────────
+function openMathsWritten(task) {
+  // Use writing activity but with maths prompt
+  writingTask = task;
+  studentImagesData = [];
+  setView('writing-activity');
+  document.getElementById('wa-title').textContent = task.name;
+  let promptText = task.activityContent || task.meta || 'Complete the maths task. Show your working.';
+  try {
+    const p = JSON.parse(task.activityContent||'');
+    if (p.text) promptText = p.text;
+  } catch(e) {}
+  document.getElementById('wa-prompt').textContent = promptText;
+  document.getElementById('wa-xp').textContent = '+' + task.xp + ' XP';
+  document.getElementById('wa-min-words').textContent = 1;
+  document.getElementById('wa-textarea').value = task.savedWriting || '';
+  document.getElementById('wa-textarea').placeholder = 'Write your answers and working here…';
+  updateWritingCount();
+  document.getElementById('wa-textarea').oninput = updateWritingCount;
+  renderStudentImages();
+  const ta = document.getElementById('wa-textarea');
+  if (ta) {
+    ta.onpaste = (e) => {
+      const items = Array.from(e.clipboardData?.items||[]);
+      const imgItem = items.find(i=>i.type.startsWith('image/'));
+      if (!imgItem) return;
+      e.preventDefault();
+      const reader = new FileReader();
+      reader.onload = ev => {
+        studentImagesData.push({name:'pasted.png', data:ev.target.result});
+        renderStudentImages();
+        showToast('Image added!');
+      };
+      reader.readAsDataURL(imgItem.getAsFile());
+    };
+  }
+}
 function openWs(t) {
   state.wsTaskId = t.id;
   document.getElementById('ws-title').textContent = t.name;
@@ -3612,7 +3650,12 @@ function openMathsActivity(task) {
   mathsIdx = 0;
   mathsCorrect = 0;
   mathsQs = parseMathsQuestionsEnhanced(task);
-  if (!mathsQs.length) mathsQs = autoGenerateMathsQs(task);
+  // Don't auto-generate — if no questions, show a blank working space
+  if (!mathsQs.length) {
+    // No questions set — open as written working space with submit
+    openMathsWritten(task);
+    return;
+  }
 
   setView('maths-activity');
   document.getElementById('ma-title').textContent = task.name;
@@ -5041,39 +5084,89 @@ function battleAction(type){
 function openTaskActivity(task) {
   const type = detectTaskType(task);
   switch(type) {
-    case 'reading':   openReadingActivity(task); break;
-    case 'maths':     openMathsActivity(task);   break;
-    case 'writing':   openWritingActivity(task); break;
-    case 'video':     openVideoActivity(task);   break;
-    case 'spelling':  openSpellingActivity(task);break;
-    case 'science':   openQBankActivity(task);   break;
-    case 'history':   openQBankActivity(task);   break;
-    case 'geography': openQBankActivity(task);   break;
-    case 'worksheet': openWs(task);              break;
-    case 'slides':    openLink(task);            break;
-    default:          openGenericActivity(task); break;
+    case 'reading':        openReadingActivity(task);    break;
+    case 'reading-write':  openWritingActivity(task);    break;
+    case 'maths-quiz':     openMathsActivity(task);      break;
+    case 'maths-mc':       openQBankActivity(task);      break;
+    case 'maths-image':    openWs(task);                 break;
+    case 'maths':          openMathsActivity(task);      break;
+    case 'writing':        openWritingActivity(task);    break;
+    case 'video':          openVideoActivity(task);      break;
+    case 'spelling':       openSpellingActivity(task);   break;
+    case 'science':        openQBankActivity(task);      break;
+    case 'history':        openQBankActivity(task);      break;
+    case 'geography':      openQBankActivity(task);      break;
+    case 'worksheet':      openWs(task);                 break;
+    case 'slides':         openLink(task);               break;
+    case 'choose':         openChoiceScreen(task);       break;
+    default:               openGenericActivity(task);    break;
   }
 }
 
-function detectTaskType(task) {
+function openChoiceScreen(task) {
   const s = task.subject.toLowerCase();
-  if (s === 'reading') return 'reading';
-  if (s === 'maths' || s === 'math') return 'maths';
-  if (s === 'writing') return 'writing';
-  if (s === 'video') return 'video';
-  if (s === 'spelling') return 'spelling';
-  if (s === 'worksheet' || task.wsData) return 'worksheet';
-  if (s === 'slides' || (task.link && task.link.includes('docs.google.com/presentation'))) return 'slides';
-  // fallback by link
-  if (task.link && (task.link.includes('youtube.com') || task.link.includes('youtu.be'))) return 'video';
-  if (task.wsData) return 'worksheet';
-  // Check if activityContent has embedded images
+  const modal = document.getElementById('modal');
+  document.getElementById('m-title').textContent = task.name;
+  const acts = document.getElementById('m-acts');
+  acts.innerHTML = '';
+
+  let choices = [];
+  if (s === 'maths') {
+    choices = [
+      { label: '📝 Written quiz', desc: 'Work out answers on paper, type in the answer', fn: () => { closeModal(); openMathsActivity(task); } },
+      { label: '🔘 Multiple choice', desc: 'Quick quiz — tap the right answer', fn: () => { closeModal(); openQBankActivity(task); } },
+      { label: '🖼️ Image / worksheet', desc: 'Draw and annotate on an uploaded file', fn: () => { closeModal(); openWs(task); } },
+    ];
+  } else if (s === 'reading') {
+    choices = [
+      { label: '📖 Read the text', desc: 'Reading activity', fn: () => { closeModal(); openReadingActivity(task); } },
+      { label: '✏️ Write a response', desc: 'Writing activity', fn: () => { closeModal(); openWritingActivity(task); } },
+    ];
+  } else if (s === 'writing') {
+    choices = [
+      { label: '✏️ Write', desc: 'Open writing space', fn: () => { closeModal(); openWritingActivity(task); } },
+      { label: '🖼️ Image / worksheet', desc: 'Draw on an uploaded file', fn: () => { closeModal(); openWs(task); } },
+    ];
+  }
+
+  document.getElementById('m-desc').textContent = 'How would you like to do this task?';
+  choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-g';
+    btn.style.cssText = 'width:100%;text-align:left;padding:12px 14px;margin-bottom:6px;border-radius:12px;border:1.5px solid #e5e7eb';
+    btn.innerHTML = '<div style="font-size:14px;font-weight:800">' + c.label + '</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">' + c.desc + '</div>';
+    btn.onclick = c.fn;
+    acts.appendChild(btn);
+  });
+
+  const cancel = document.createElement('button');
+  cancel.className = 'btn btn-g';
+  cancel.textContent = 'Not now';
+  cancel.onclick = closeModal;
+  acts.appendChild(cancel);
+  modal.classList.add('open');
+}
+
+function detectTaskType(task) {
+  // First: check explicit mode stored in activityContent JSON
   if (task.activityContent) {
     try {
       const p = JSON.parse(task.activityContent);
+      if (p.mode) return p.mode;
       if (p.images && p.images.length) return 'worksheet';
     } catch(e) {}
   }
+  // Fallback: infer from subject/link (legacy tasks)
+  const s = task.subject.toLowerCase();
+  if (s === 'video' || (task.link && (task.link.includes('youtube.com') || task.link.includes('youtu.be')))) return 'video';
+  if (s === 'spelling') return 'spelling';
+  if (s === 'worksheet' || task.wsData) return 'worksheet';
+  if (s === 'slides' || (task.link && task.link.includes('docs.google.com/presentation'))) return 'slides';
+  if (s === 'science') return 'science';
+  if (s === 'history') return 'history';
+  if (s === 'geography') return 'geography';
+  // For reading/maths/writing with no explicit mode — show a choice screen
+  if (s === 'reading' || s === 'maths' || s === 'writing') return 'choose';
   return 'generic';
 }
 
