@@ -7470,52 +7470,54 @@ function admRenderTasks() {
     subjRow.appendChild(mkNumInp('tstep', t.steps, '60px', 'Steps'));
     card.appendChild(subjRow);
 
-    // Mode row
-    const modeRow = document.createElement('div');
-    modeRow.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin-bottom:7px';
-    const modeLbl = document.createElement('div');
-    modeLbl.style.cssText = 'font-size:11px;font-weight:700;color:#94a3b8;min-width:64px;padding-top:8px;flex-shrink:0';
-    modeLbl.textContent = 'Mode';
-    const modeSel = document.createElement('select');
-    modeSel.id = 'tmode'+fbKey;
-    modeSel.style.cssText = 'flex:1;padding:7px 10px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
-    modeSel.innerHTML = getModeOpts(t.subject, getTaskMode(t));
-    subSel.addEventListener('change', () => { modeSel.innerHTML = getModeOpts(subSel.value, modeSel.value); });
-    modeRow.appendChild(modeLbl); modeRow.appendChild(modeSel);
-    card.appendChild(modeRow);
-
-    // Maths type config panel (shown when subject is Maths)
+    // Mode / Maths config
     if (t.subject === 'Maths') {
+      // Maths tasks: single type picker + config panel, no generic mode dropdown
       let mcfg = {};
-      try { mcfg = JSON.parse(t.activity_content||'{}'); } catch(e){}
-      
+      try { mcfg = JSON.parse(t.activity_content||'{}'); } catch(e) {}
+
       const mathsTypeRow = document.createElement('div');
-      mathsTypeRow.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:7px';
-      const mtLbl=document.createElement('div');mtLbl.style.cssText='font-size:11px;font-weight:700;color:#94a3b8;min-width:64px;flex-shrink:0';
-      mtLbl.textContent='Maths type';
-      const mtSel=document.createElement('select');
-      mtSel.id='mtype-'+fbKey;
-      mtSel.style.cssText='flex:1;padding:7px 10px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
-      [['daily-review','📊 Daily maths review'],['worksheet','🖼️ Worksheet (upload + annotate)'],['challenge','🏆 Maths challenge']].forEach(([val,lbl])=>{
-        const o=document.createElement('option');o.value=val;o.textContent=lbl;
-        if(val===(mcfg.mathsType||'daily-review'))o.selected=true;
+      mathsTypeRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:7px';
+      const mtLbl = document.createElement('div');
+      mtLbl.style.cssText = 'font-size:11px;font-weight:700;color:#94a3b8;min-width:64px;flex-shrink:0';
+      mtLbl.textContent = 'Maths type';
+      const mtSel = document.createElement('select');
+      mtSel.id = 'mtype-'+fbKey;
+      mtSel.style.cssText = 'flex:1;padding:7px 10px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
+      [['daily-review','📊 Daily maths review'],['worksheet','🖼️ Worksheet (upload + annotate)'],['challenge','🏆 Maths challenge']].forEach(([val,lbl]) => {
+        const o = document.createElement('option'); o.value=val; o.textContent=lbl;
+        if (val === (mcfg.mathsType||'daily-review')) o.selected = true;
         mtSel.appendChild(o);
       });
-      mathsTypeRow.appendChild(mtLbl);mathsTypeRow.appendChild(mtSel);
+      mathsTypeRow.appendChild(mtLbl); mathsTypeRow.appendChild(mtSel);
       card.appendChild(mathsTypeRow);
 
-      const cfgDiv=document.createElement('div');cfgDiv.id='maths-cfg-'+fbKey;
+      const cfgDiv = document.createElement('div'); cfgDiv.id = 'maths-cfg-'+fbKey;
       card.appendChild(cfgDiv);
       buildMathsConfig(fbKey, mcfg, cfgDiv);
 
-      mtSel.addEventListener('change', ()=>{
-        let c={};try{c=JSON.parse(admTasks.find(x=>x.id===fbKey)?.activity_content||'{}')}catch(e){}
-        c.mathsType=mtSel.value;
-        buildMathsConfig(fbKey,c,cfgDiv);
+      mtSel.addEventListener('change', () => {
+        let c = {}; try { c = JSON.parse(admTasks.find(x=>x.id===fbKey)?.activity_content||'{}'); } catch(e) {}
+        c.mathsType = mtSel.value;
+        buildMathsConfig(fbKey, c, cfgDiv);
       });
+    } else {
+      // Non-Maths tasks: show the generic Mode dropdown
+      const modeRow = document.createElement('div');
+      modeRow.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin-bottom:7px';
+      const modeLbl = document.createElement('div');
+      modeLbl.style.cssText = 'font-size:11px;font-weight:700;color:#94a3b8;min-width:64px;padding-top:8px;flex-shrink:0';
+      modeLbl.textContent = 'Mode';
+      const modeSel = document.createElement('select');
+      modeSel.id = 'tmode'+fbKey;
+      modeSel.style.cssText = 'flex:1;padding:7px 10px;border-radius:9px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
+      modeSel.innerHTML = getModeOpts(t.subject, getTaskMode(t));
+      subSel.addEventListener('change', () => { modeSel.innerHTML = getModeOpts(subSel.value, modeSel.value); });
+      modeRow.appendChild(modeLbl); modeRow.appendChild(modeSel);
+      card.appendChild(modeRow);
     }
 
-    mkRow('Link', mkInp('tl', t.link||'', ''));
+    mkRow('Link', mkInp('tl', t.link||'', ''));    mkRow('Link', mkInp('tl', t.link||'', ''));
 
     // ── Content tabs (Maths gets special panel) ──────────
     if (t.subject === 'Maths') {
