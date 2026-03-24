@@ -68,6 +68,41 @@
 .ws-file-pick{display:flex;gap:8px;padding:8px 10px;background:#f8faff;border-bottom:1px solid #e5e7eb;flex-wrap:wrap;align-items:center}
 .ws-file-pick label{display:flex;align-items:center;gap:5px;padding:5px 10px;background:#4f46e5;color:#fff;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700}
 
+
+/* Sound activity word highlighting */
+.snd-word {
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 1px 3px;
+  margin: 1px;
+  transition: background .12s, transform .1s;
+  border: 2px solid transparent;
+}
+.snd-word:hover { background: #ede9fe; }
+.snd-word.selected { background: #fbbf24; color: #1a1a2e; border-color: #f59e0b; transform: scale(1.05); }
+.snd-word.correct  { background: #22c55e; color: #fff; border-color: #16a34a; }
+.snd-word.wrong    { background: #ef4444; color: #fff; border-color: #dc2626; }
+.snd-word.missed   { background: #f97316; color: #fff; border-color: #ea580c; text-decoration: underline; }
+
+
+/* Find the Sound activity */
+.fts-word {
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 1px 3px;
+  margin: 1px 2px;
+  transition: background .15s, color .15s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.fts-word:hover { background: #ede9fe; }
+.fts-word.selected { background: #7c3aed; color: #fff; border-radius: 6px; }
+.fts-word.correct  { background: #22c55e; color: #fff; }
+.fts-word.missed   { background: #fbbf24; color: #1e293b; }
+.fts-word.wrong    { background: #ef4444; color: #fff; }
+
 </style>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -885,6 +920,54 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
 </div>
 
 <!-- SPELLING ACTIVITY -->
+<div class="gs" id="sound-activity">
+  <div class="g-hdr">
+    <button class="bk-btn" onclick="showMain()">← Back</button>
+    <div class="g-title" id="snd-title">Find the Sound</div>
+    <div style="margin-left:auto;background:#fef9ee;color:#d97706;font-size:11px;font-weight:800;padding:3px 9px;border-radius:9px" id="snd-xp">+25 XP</div>
+  </div>
+
+  <!-- Sound focus banner -->
+  <div style="background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px">Focus sound / spelling</div>
+      <div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:2px" id="snd-focus"></div>
+    </div>
+    <div style="margin-left:auto;text-align:right">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7)">Highlighted</div>
+      <div style="font-size:20px;font-weight:900;color:#fbbf24" id="snd-count">0</div>
+    </div>
+  </div>
+
+  <!-- Instructions -->
+  <div style="background:#fef3c7;border-radius:10px;padding:10px 13px;margin-bottom:12px;border-left:4px solid #f59e0b;font-size:13px;font-weight:700;color:#92400e" id="snd-instructions">
+    Tap every word that contains the sound <span id="snd-focus-inline" style="background:#f59e0b;color:#fff;padding:1px 7px;border-radius:5px"></span>
+  </div>
+
+  <!-- Text passage -->
+  <div style="background:#fff;border-radius:13px;border:2px solid #e5e7eb;padding:16px;margin-bottom:12px">
+    <div style="font-size:15px;line-height:2.2;color:#1a1a2e;font-weight:500" id="snd-text"></div>
+  </div>
+
+  <!-- Score and feedback -->
+  <div id="snd-feedback" style="display:none;background:#f0fdf4;border-radius:12px;padding:12px 14px;margin-bottom:10px;border:2px solid #bbf7d0">
+    <div style="font-size:14px;font-weight:800;color:#15803d" id="snd-feedback-msg"></div>
+    <div style="font-size:12px;color:#64748b;margin-top:4px" id="snd-feedback-detail"></div>
+  </div>
+
+  <!-- Action buttons -->
+  <div style="display:flex;gap:8px">
+    <button id="snd-check-btn" onclick="checkSoundActivity()" class="btn-big" style="flex:2;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:800;background:#4f46e5;color:#fff;font-family:inherit;cursor:pointer">
+      ✓ Check my answers
+    </button>
+    <button id="snd-reset-btn" onclick="resetSoundActivity()" style="flex:1;padding:14px;border-radius:14px;border:1.5px solid #e2e8f0;font-size:14px;font-weight:700;background:#fff;color:#64748b;font-family:inherit;cursor:pointer">
+      🔄 Reset
+    </button>
+  </div>
+  <button id="snd-done-btn" onclick="completeSoundActivity()" style="display:none;width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;font-weight:800;background:#22c55e;color:#fff;font-family:inherit;cursor:pointer;margin-top:8px">
+    🌟 Done! Collect XP
+  </button>
+</div>
 <div class="gs" id="spelling-activity">
   <div class="g-hdr">
     <button class="bk-btn" onclick="showMain()">← Back</button>
@@ -1118,6 +1201,55 @@ body{font-family:'Nunito','Segoe UI',-apple-system,sans-serif;background:var(--b
   </div>
 </div>
 
+
+
+<!-- FIND THE SOUND ACTIVITY -->
+<div class="gs" id="find-sound-activity">
+  <div class="g-hdr">
+    <button class="bk-btn" onclick="showMain()">← Back</button>
+    <div class="g-title" id="fts-title">Find the Sound</div>
+    <div style="margin-left:auto;background:#fef9ee;color:#d97706;font-size:11px;font-weight:800;padding:3px 9px;border-radius:9px" id="fts-xp">+25 XP</div>
+  </div>
+
+  <!-- Target sound display -->
+  <div style="background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px">
+    <div style="font-size:36px">🔍</div>
+    <div>
+      <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px">Find this sound / spelling</div>
+      <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:2px;font-family:Georgia,serif" id="fts-target"></div>
+    </div>
+    <div style="margin-left:auto;text-align:right">
+      <div style="font-size:11px;color:rgba(255,255,255,.6);font-weight:700">Found</div>
+      <div style="font-size:22px;font-weight:900;color:#fbbf24"><span id="fts-count">0</span> <span style="font-size:13px">words</span></div>
+    </div>
+  </div>
+
+  <!-- Instructions -->
+  <div style="background:#f0fdf4;border-radius:10px;padding:9px 12px;margin-bottom:10px;border-left:4px solid #22c55e;font-size:12px;font-weight:700;color:#166534" id="fts-instructions">
+    Tap on every word that contains the sound shown above. Tap again to deselect.
+  </div>
+
+  <!-- Text passage -->
+  <div style="background:#fff;border-radius:14px;border:2px solid #e5e7eb;padding:14px;line-height:2.2;font-size:16px;font-weight:600;color:#1e293b" id="fts-text"></div>
+
+  <!-- Actions -->
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <button onclick="ftsCheck()" style="flex:2;padding:13px;border-radius:12px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer">✓ Check my answers</button>
+    <button onclick="ftsClear()" style="flex:1;padding:13px;border-radius:12px;border:2px solid #e5e7eb;background:#fff;color:#64748b;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Clear</button>
+  </div>
+
+  <!-- Result -->
+  <div id="fts-result" style="display:none;background:#fff;border-radius:14px;border:2px solid #e5e7eb;padding:16px;margin-top:12px;text-align:center">
+    <div style="font-size:40px;margin-bottom:8px" id="fts-result-emoji">🎉</div>
+    <div style="font-size:22px;font-weight:900;color:#4f46e5;margin-bottom:4px" id="fts-result-score"></div>
+    <div style="font-size:13px;color:#64748b;font-weight:700;margin-bottom:12px" id="fts-result-detail"></div>
+    <div id="fts-missed" style="display:none;margin-bottom:12px;background:#fef9ee;border-radius:10px;padding:10px 12px;text-align:left">
+      <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:6px">Words you missed:</div>
+      <div id="fts-missed-list" style="font-size:13px;font-weight:700;color:#d97706"></div>
+    </div>
+    <button onclick="ftsComplete()" style="padding:12px 28px;border-radius:12px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer">Finish &amp; earn XP 🌟</button>
+  </div>
+</div>
 </div><!-- #app -->
 
 <div class="mo" id="modal"><div class="md"><div class="md-title" id="m-title"></div><div class="md-desc" id="m-desc"></div><div class="md-acts" id="m-acts"></div></div></div>
@@ -1266,7 +1398,7 @@ function getItem(id){return AV_CATALOGUE.find(x=>x.id===id);}
 // ═══════════════════════════════════════════════════════
 // VIEWS
 // ═══════════════════════════════════════════════════════
-const ALL_VIEWS=['main-view','avatar-scr','pin-view','admin-view','reading-activity','maths-activity','writing-activity','video-activity','spelling-activity','code-scr','qbank-activity','math-scr','tt-scr','word-scr','bee-scr','sw-scr','mem-scr','planet-scr','sci-scr','story-scr','build-scr','draw-scr','ws-scr','sl-scr'];
+const ALL_VIEWS=['main-view','avatar-scr','pin-view','admin-view','reading-activity','maths-activity','writing-activity','video-activity','spelling-activity','code-scr','qbank-activity','math-scr','tt-scr','word-scr','bee-scr','sw-scr','mem-scr','planet-scr','sci-scr','story-scr','build-scr','draw-scr','ws-scr','sl-scr','find-sound-activity'];
 function setView(id){
   ALL_VIEWS.forEach(v=>{const el=document.getElementById(v);if(el){el.style.display='none';el.classList.remove('open');}});
   const el=document.getElementById(id);if(el){el.style.display='block';el.classList.add('open');}
@@ -4177,6 +4309,196 @@ function showTaskReview(task) {
   m.classList.add('open');
 }
 
+
+// ══════════════════════════════════════════════════════════
+// FIND THE SOUND ACTIVITY
+// ══════════════════════════════════════════════════════════
+let ftsTask = null;
+let ftsTarget = '';       // the sound/spelling to find
+let ftsAnswers = [];      // which words contain the target (set by teacher or auto-detected)
+let ftsSelected = new Set(); // word indices Tom has tapped
+
+function openFindSoundActivity(task) {
+  ftsTask = task;
+  ftsSelected = new Set();
+
+  // Parse activityContent: expects JSON { target, text } or plain "TARGET: text..."
+  let target = '', passage = '', answers = [];
+  const ac = task.activityContent || '';
+  try {
+    const p = JSON.parse(ac);
+    target  = p.target || p.sound || '';
+    passage = p.text   || '';
+    // Optional teacher-defined answer list (comma separated words)
+    if (p.answers) answers = p.answers.split(',').map(w => w.trim().toLowerCase());
+  } catch(e) {
+    // Plain text format: first line = "TARGET:xx" rest = passage
+    const lines = ac.split('\n');
+    const tLine = lines.find(l => l.toLowerCase().startsWith('target:') || l.toLowerCase().startsWith('sound:'));
+    if (tLine) {
+      target = tLine.split(':').slice(1).join(':').trim();
+      passage = lines.filter(l => l !== tLine).join(' ').trim();
+    } else {
+      // Fallback: first word is target
+      const parts = ac.split(' ');
+      target = parts[0];
+      passage = parts.slice(1).join(' ');
+    }
+  }
+
+  if (!target || !passage) {
+    showToast('Task needs a target sound and passage text — check admin settings');
+    return;
+  }
+
+  ftsTarget = target;
+  document.getElementById('fts-title').textContent = task.name;
+  document.getElementById('fts-xp').textContent = '+' + task.xp + ' XP';
+  document.getElementById('fts-target').textContent = target;
+  document.getElementById('fts-count').textContent = '0';
+  document.getElementById('fts-result').style.display = 'none';
+
+  // Tokenise the passage into words + punctuation
+  renderFtsText(passage, target, answers);
+  setView('find-sound-activity');
+}
+
+function renderFtsText(passage, target, teacherAnswers) {
+  const container = document.getElementById('fts-text');
+  container.innerHTML = '';
+
+  // Split into tokens: words and non-word chars
+  const tokens = passage.split(/(s+)/);
+  // Further split punctuation from words
+  let wordIdx = 0;
+  const wordSpans = []; // {el, word, idx, isWord}
+
+  tokens.forEach(token => {
+    if (!token) return;
+    if (/^s+$/.test(token)) {
+      container.appendChild(document.createTextNode(token));
+      return;
+    }
+    // Split punctuation from word: e.g. "rain," -> "rain" + ","
+    const match = token.match(/^([^a-zA-Z']*)([a-zA-Z'][a-zA-Z']*)?([^a-zA-Z']*)$/);
+    if (match) {
+      if (match[1]) container.appendChild(document.createTextNode(match[1]));
+      if (match[2]) {
+        const word = match[2];
+        const span = document.createElement('span');
+        span.className = 'fts-word';
+        span.textContent = word;
+        span.dataset.idx = wordIdx;
+        span.dataset.word = word;
+        const wi = wordIdx;
+        span.onclick = () => ftsToggleWord(wi, span);
+        container.appendChild(span);
+        wordSpans.push({ el: span, word, idx: wordIdx });
+        wordIdx++;
+      }
+      if (match[3]) container.appendChild(document.createTextNode(match[3]));
+    } else {
+      container.appendChild(document.createTextNode(token));
+    }
+  });
+
+  // Determine correct answers: either teacher-provided or auto-detect
+  if (teacherAnswers.length) {
+    ftsAnswers = wordSpans
+      .filter(w => teacherAnswers.includes(w.word.toLowerCase().replace(/[^a-z']/g,'')))
+      .map(w => w.idx);
+  } else {
+    // Auto-detect: word contains the target pattern (case-insensitive)
+    const t = target.toLowerCase();
+    ftsAnswers = wordSpans
+      .filter(w => w.word.toLowerCase().includes(t))
+      .map(w => w.idx);
+  }
+}
+
+function ftsToggleWord(idx, span) {
+  if (ftsSelected.has(idx)) {
+    ftsSelected.delete(idx);
+    span.classList.remove('selected');
+  } else {
+    ftsSelected.add(idx);
+    span.classList.add('selected');
+  }
+  document.getElementById('fts-count').textContent = ftsSelected.size;
+}
+
+function ftsClear() {
+  ftsSelected.clear();
+  document.querySelectorAll('.fts-word').forEach(s => {
+    s.className = 'fts-word';
+  });
+  document.getElementById('fts-count').textContent = '0';
+  document.getElementById('fts-result').style.display = 'none';
+}
+
+function ftsCheck() {
+  const allWords = document.querySelectorAll('.fts-word');
+  let correct = 0, wrong = 0, missed = 0;
+  const missedWords = [];
+
+  allWords.forEach(span => {
+    const idx = parseInt(span.dataset.idx);
+    const isAnswer = ftsAnswers.includes(idx);
+    const isSelected = ftsSelected.has(idx);
+
+    span.classList.remove('selected','correct','missed','wrong');
+
+    if (isAnswer && isSelected)  { span.classList.add('correct'); correct++; }
+    else if (isAnswer && !isSelected) { span.classList.add('missed'); missed++; missedWords.push(span.dataset.word); }
+    else if (!isAnswer && isSelected) { span.classList.add('wrong'); wrong++; }
+  });
+
+  const total = ftsAnswers.length;
+  const pct = total > 0 ? Math.round(correct / total * 100) : 0;
+  const emoji = pct === 100 ? '🌟' : pct >= 70 ? '🎉' : pct >= 40 ? '💪' : '🤔';
+
+  document.getElementById('fts-result').style.display = 'block';
+  document.getElementById('fts-result-emoji').textContent = emoji;
+  document.getElementById('fts-result-score').textContent = correct + ' / ' + total + ' correct (' + pct + '%)';
+  document.getElementById('fts-result-detail').textContent =
+    (wrong > 0 ? wrong + ' wrong highlight' + (wrong>1?'s':'') + ' · ' : '') +
+    (missed > 0 ? missed + ' missed' : '') +
+    (wrong === 0 && missed === 0 ? 'Perfect! Every word found! 🎯' : '');
+
+  const missedEl = document.getElementById('fts-missed');
+  if (missedWords.length) {
+    missedEl.style.display = 'block';
+    document.getElementById('fts-missed-list').textContent = missedWords.join(', ');
+  } else {
+    missedEl.style.display = 'none';
+  }
+
+  // Scroll to result
+  document.getElementById('fts-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function ftsComplete() {
+  if (!ftsTask) return;
+  const allWords = document.querySelectorAll('.fts-word');
+  let correct = 0;
+  allWords.forEach(span => {
+    if (ftsAnswers.includes(parseInt(span.dataset.idx)) && ftsSelected.has(parseInt(span.dataset.idx))) correct++;
+  });
+  const pct = ftsAnswers.length > 0 ? correct / ftsAnswers.length : 0;
+  // Award full XP if ≥60%, half XP otherwise
+  const xpEarned = pct >= 0.6 ? ftsTask.xp : Math.round(ftsTask.xp * 0.5);
+  state.xp += xpEarned;
+  ftsTask.done = true;
+  ftsTask.progress = ftsTask.steps;
+  awardMonsterXP(Math.round(xpEarned * 0.8));
+  renderXP();
+  autoSaveLocal();
+  await sbSaveState();
+  await sbSaveTask(ftsTask);
+  showToast('Quest complete! +' + xpEarned + ' XP ⭐');
+  showMain();
+}
+
 // ═══════════════════════════════════════════════════════
 // SESSION GATE SYSTEM
 // ═══════════════════════════════════════════════════════
@@ -5141,12 +5463,14 @@ function openTaskActivity(task) {
     case 'writing':        openWritingActivity(task);    break;
     case 'video':          openVideoActivity(task);      break;
     case 'spelling':       openSpellingActivity(task);   break;
+    case 'sound-find':     openSoundActivity(task);      break;
     case 'science':        openQBankActivity(task);      break;
     case 'history':        openQBankActivity(task);      break;
     case 'geography':      openQBankActivity(task);      break;
     case 'worksheet':      openWs(task);                 break;
     case 'slides':         openLink(task);               break;
     case 'choose':         openChoiceScreen(task);       break;
+    case 'find-sound':     openFindSoundActivity(task);  break;
     default:               openGenericActivity(task);    break;
   }
 }
@@ -5201,6 +5525,7 @@ function detectTaskType(task) {
     try {
       const p = JSON.parse(task.activityContent);
       if (p.mode) return p.mode;
+      if (p.focus || p.sound) return 'sound-find'; // auto-detect sound activity
       if (p.images && p.images.length) return 'worksheet';
     } catch(e) {}
   }
@@ -6487,6 +6812,178 @@ openQBankActivity = function(task) {
     });
   }, 100);
 };
+
+
+// ══════════════════════════════════════════════════════════
+// FIND THE SOUND ACTIVITY
+// activityContent format (JSON):
+// { mode:"sound-find", focus:"igh", text:"The bright light...", caseSensitive:false }
+// OR plain: "igh|The bright light shone through the night sky."
+// ══════════════════════════════════════════════════════════
+
+let soundTask = null;
+let soundFocus = '';
+let soundWords = []; // [{word, hasFocus, element}]
+let soundChecked = false;
+
+function openSoundActivity(task) {
+  soundTask = task;
+  soundChecked = false;
+  setView('sound-activity');
+
+  document.getElementById('snd-title').textContent = task.name;
+  document.getElementById('snd-xp').textContent = '+' + task.xp + ' XP';
+  document.getElementById('snd-feedback').style.display = 'none';
+  document.getElementById('snd-done-btn').style.display = 'none';
+  document.getElementById('snd-check-btn').style.display = 'block';
+
+  // Parse content
+  let focus = '';
+  let passage = '';
+  let caseSensitive = false;
+
+  const ac = task.activityContent || '';
+  try {
+    const p = JSON.parse(ac);
+    focus = p.focus || p.sound || '';
+    passage = p.text || p.passage || '';
+    caseSensitive = p.caseSensitive || false;
+  } catch(e) {
+    // Plain format: "igh|The bright night light..."
+    const parts = ac.split('|');
+    if (parts.length >= 2) {
+      focus = parts[0].trim();
+      passage = parts.slice(1).join('|').trim();
+    } else {
+      passage = ac;
+    }
+  }
+
+  soundFocus = focus;
+
+  // Show focus
+  document.getElementById('snd-focus').textContent = focus || '?';
+  document.getElementById('snd-focus-inline').textContent = focus || '?';
+
+  // Build word spans
+  const textEl = document.getElementById('snd-text');
+  textEl.innerHTML = '';
+  soundWords = [];
+
+  if (!passage) {
+    textEl.innerHTML = '<span style="color:#94a3b8;font-size:13px">No text set — ask your teacher to add a passage.</span>';
+    return;
+  }
+
+  // Tokenise: split on spaces but keep punctuation attached to words
+  const tokens = passage.split(/(s+)/);
+  tokens.forEach(token => {
+    if (/^s+$/.test(token)) {
+      textEl.appendChild(document.createTextNode(token));
+      return;
+    }
+    // Strip leading/trailing punctuation for matching, keep it in display
+    const clean = token.replace(/^[^a-zA-Z']+|[^a-zA-Z']+$/g, '');
+    const hasFocus = focus
+      ? (caseSensitive ? clean.includes(focus) : clean.toLowerCase().includes(focus.toLowerCase()))
+      : false;
+
+    const span = document.createElement('span');
+    span.className = 'snd-word';
+    span.textContent = token;
+    span.dataset.idx = soundWords.length;
+
+    if (clean) {
+      span.onclick = () => toggleSoundWord(span);
+      soundWords.push({ word: clean, hasFocus, element: span });
+    } else {
+      // Pure punctuation — not clickable
+      span.style.cursor = 'default';
+    }
+    textEl.appendChild(span);
+  });
+
+  updateSoundCount();
+}
+
+function toggleSoundWord(span) {
+  if (soundChecked) return;
+  span.classList.toggle('selected');
+  updateSoundCount();
+}
+
+function updateSoundCount() {
+  const sel = soundWords.filter(w => w.element.classList.contains('selected')).length;
+  document.getElementById('snd-count').textContent = sel;
+}
+
+function checkSoundActivity() {
+  soundChecked = true;
+  let correct = 0, wrong = 0, missed = 0;
+
+  soundWords.forEach(w => {
+    const sel = w.element.classList.contains('selected');
+    w.element.classList.remove('selected');
+    if (w.hasFocus && sel)  { w.element.classList.add('correct'); correct++; }
+    else if (!w.hasFocus && sel) { w.element.classList.add('wrong');   wrong++; }
+    else if (w.hasFocus && !sel) { w.element.classList.add('missed');  missed++; }
+  });
+
+  const total = soundWords.filter(w => w.hasFocus).length;
+  const pct = total > 0 ? Math.round(correct / total * 100) : 100;
+
+  const fb = document.getElementById('snd-feedback');
+  const msg = document.getElementById('snd-feedback-msg');
+  const det = document.getElementById('snd-feedback-detail');
+  fb.style.display = 'block';
+
+  if (pct === 100 && wrong === 0) {
+    fb.style.background = '#f0fdf4'; fb.style.borderColor = '#bbf7d0';
+    msg.style.color = '#15803d';
+    msg.textContent = '🌟 Perfect! You found every ' + soundFocus + ' word!';
+    det.textContent = correct + ' word' + (correct !== 1 ? 's' : '') + ' found correctly.';
+  } else if (pct >= 70) {
+    fb.style.background = '#fefce8'; fb.style.borderColor = '#fde047';
+    msg.style.color = '#854d0e';
+    msg.textContent = '👍 Good work! ' + pct + '% correct.';
+    det.textContent = correct + ' correct · ' + wrong + ' incorrect · ' + missed + ' missed (shown in orange)';
+  } else {
+    fb.style.background = '#fff7ed'; fb.style.borderColor = '#fed7aa';
+    msg.style.color = '#9a3412';
+    msg.textContent = '💪 Keep trying! ' + pct + '% — the orange words were ones you missed.';
+    det.textContent = correct + ' correct · ' + wrong + ' incorrect · ' + missed + ' missed';
+  }
+
+  document.getElementById('snd-check-btn').style.display = 'none';
+  document.getElementById('snd-done-btn').style.display = 'block';
+}
+
+function resetSoundActivity() {
+  soundChecked = false;
+  soundWords.forEach(w => {
+    w.element.className = 'snd-word';
+    w.element.onclick = () => toggleSoundWord(w.element);
+  });
+  document.getElementById('snd-feedback').style.display = 'none';
+  document.getElementById('snd-check-btn').style.display = 'block';
+  document.getElementById('snd-done-btn').style.display = 'none';
+  updateSoundCount();
+}
+
+async function completeSoundActivity() {
+  if (!soundTask) return;
+  soundTask.done = true;
+  soundTask.progress = soundTask.steps;
+  state.xp += soundTask.xp;
+  awardMonsterXP(Math.round(soundTask.xp * 0.7));
+  checkMilestones();
+  autoSaveLocal();
+  await sbSaveTask(soundTask);
+  await sbSaveState();
+  showMain();
+  showToast('Quest complete! +' + soundTask.xp + ' XP ⭐');
+  renderAll();
+}
 
 </script>
 </body>
