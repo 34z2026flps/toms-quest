@@ -8827,15 +8827,29 @@ function buildMathsConfig(fbKey, cfg, containerEl) {
     modeRow.appendChild(modeSel); container.appendChild(modeRow);
 
     // Preview info
-    const info = document.createElement('div');
-    info.style.cssText = 'font-size:10px;color:#6366f1;font-weight:700;margin-top:8px;padding:6px 8px;background:#eef2ff;border-radius:6px';
-    info.textContent = '✓ Questions generated automatically from the quiz bank when Tom opens this task';
-    container.appendChild(info);
+    // Preview button
+    const prevBtn = document.createElement('button');
+    prevBtn.style.cssText = 'width:100%;margin-top:8px;padding:8px;border-radius:8px;border:1.5px solid #c7d2fe;background:#f8faff;color:#4f46e5;font-family:inherit;font-size:11px;font-weight:800;cursor:pointer';
+    prevBtn.textContent = '👁 Preview questions';
+    const prevDiv = document.createElement('pre');
+    prevDiv.id = 'mcfg-preview-'+fbKey;
+    prevDiv.style.cssText = 'display:none;font-size:11px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px;margin-top:6px;white-space:pre-wrap;max-height:120px;overflow-y:auto;font-family:monospace;color:#334155';
+    prevBtn.addEventListener('click', () => {
+      const topic = document.getElementById('mcfg-topic-'+fbKey)?.value||'addition';
+      const year  = document.getElementById('mcfg-year-'+fbKey)?.value||'yr3';
+      const count = parseInt(document.getElementById('mcfg-count-'+fbKey)?.value||'10');
+      const qs = getMathsQuestions(topic, year, count);
+      if (!qs.length) { prevDiv.textContent = 'No questions found for this topic/level'; prevDiv.style.display='block'; return; }
+      prevDiv.textContent = qs.map((q,i) => (i+1)+'. '+q.q+'  →  '+q.a).join('\n');
+      prevDiv.style.display = 'block';
+    });
+    container.appendChild(prevBtn);
+    container.appendChild(prevDiv);
 
     // Save config button
     const saveBtn = document.createElement('button');
     saveBtn.style.cssText = 'width:100%;margin-top:8px;padding:9px;border-radius:9px;border:none;background:#4f46e5;color:#fff;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer';
-    saveBtn.textContent = '💾 Save maths config';
+    saveBtn.textContent = '💾 Generate & save questions for Tom';
     saveBtn.addEventListener('click', () => saveMathsConfig(fbKey));
     container.appendChild(saveBtn);
 
@@ -8902,26 +8916,47 @@ async function saveMathsConfig(fbKey) {
   const type = typeSel ? typeSel.value : (cfg.mathsType||'daily-review');
 
   if (type === 'daily-review' || type === 'challenge') {
-    cfg.mathsType = type;
-    cfg.year = document.getElementById('mcfg-year-'+fbKey)?.value || 'yr3';
-    cfg.topic = document.getElementById('mcfg-topic-'+fbKey)?.value || 'addition';
-    cfg.count = parseInt(document.getElementById('mcfg-count-'+fbKey)?.value||'10');
-    cfg.answerMode = document.getElementById('mcfg-mode-'+fbKey)?.value || 'mc';
-    // Store mode for detectTaskType
-    cfg.mode = cfg.answerMode === 'mc' ? 'maths-mc' : 'maths-quiz';
-    cfg.text = '';
-    cfg.files = [];
-    // Update steps to match question count so progress bar works
-    const db2 = await getDb();
-    await db2.ref('tasks/'+fbKey).update({steps: cfg.count, updated_at: new Date().toISOString()});
+    const topic = document.getElementById('mcfg-topic-'+fbKey)?.value || 'addition';
+    const year  = document.getElementById('mcfg-year-'+fbKey)?.value  || 'yr3';
+    const count = parseInt(document.getElementById('mcfg-count-'+fbKey)?.value||'10');
+    const answerMode = document.getElementById('mcfg-mode-'+fbKey)?.value || 'mc';
+
+    // Generate questions NOW and store them as text
+    const qs = getMathsQuestions(topic, year, count);
+    if (!qs.length) { showToast('No questions found for that topic/level — try another'); return; }
+
+    // Store as pipe-delimited lines: question|answer|wrong1|wrong2|wrong3
+    const qLines = qs.map(q => {
+      const wrongs = generateWrongAnswers(q.a, q.q);
+      return q.q + '|' + q.a + '|' + wrongs.join('|');
+    }).join('\n');
+
+    cfg = {
+      mathsType: type,
+      topic, year, count, answerMode,
+      mode: answerMode === 'mc' ? 'maths-mc' : 'maths-quiz',
+      text: qLines,
+      files: []
+    };
+
+    // Update steps = question count for progress tracking
+    const db1 = await getDb();
+    await db1.ref('tasks/'+fbKey).update({steps: count, updated_at: new Date().toISOString()});
     const tRef = admTasks.find(x=>x.id===fbKey);
-    if(tRef) tRef.steps = cfg.count;
+    if (tRef) tRef.steps = count;
+
+    // Show preview in the info div
+    const previewEl = document.getElementById('mcfg-preview-'+fbKey);
+    if (previewEl) {
+      previewEl.style.display = 'block';
+      previewEl.textContent = qs.slice(0,3).map((q,i) => (i+1)+'. '+q.q+' = '+q.a).join('\n') + (qs.length>3 ? '\n…and '+(qs.length-3)+' more' : '');
+    }
   }
 
   const db = await getDb();
   await db.ref('tasks/'+fbKey).update({activity_content: JSON.stringify(cfg), updated_at: new Date().toISOString()});
   t.activity_content = JSON.stringify(cfg);
-  showToast('Maths config saved ✓');
+  showToast('✓ '+( (cfg.text||'').split('\n').length )+' questions saved — Tom can now open this task!');
 }
 
 async function uploadMathsWorksheet(event, fbKey) {
@@ -8974,15 +9009,24 @@ function openMathsReview(task) {
   mrCorrect = 0;
   mrMode = cfg.answerMode || (cfg.mode === 'maths-mc' ? 'mc' : 'typed');
 
-  // Generate questions from bank
-  const year = cfg.year || 'yr3';
-  const topic = cfg.topic || 'addition';
-  const count = cfg.count || 10;
-  const allQs = getMathsQuestions(topic, year, 100);
-  if (!allQs.length) {
-    showToast('No questions found — check task config'); return;
+  // Read pre-generated questions stored by admin (pipe-delimited text)
+  const rawText = cfg.text || task.activityContent || '';
+  const lines = rawText.split('\n').filter(l => l.trim() && l.includes('|'));
+  if (lines.length) {
+    mrQs = lines.map(line => {
+      const parts = line.split('|');
+      return { q: parts[0], a: parts[1], opts: parts.slice(2).filter(Boolean) };
+    });
+  } else {
+    // Fallback: generate live from params if text not stored yet
+    const year = cfg.year || 'yr3';
+    const topic = cfg.topic || 'addition';
+    const count = cfg.count || 10;
+    mrQs = getMathsQuestions(topic, year, count);
   }
-  mrQs = allQs.slice(0, count);
+  if (!mrQs.length) {
+    showToast('No questions found — please re-save this task in admin'); return;
+  }
 
   setView('mr-activity');
   document.getElementById('mr-title').textContent = task.name;
@@ -9008,7 +9052,8 @@ function renderMRQuestion() {
   if (mrMode === 'mc') {
     document.getElementById('mr-mc-wrap').style.display = 'grid';
     document.getElementById('mr-typed-wrap').style.display = 'none';
-    const opts = shuffleArr([q.a, ...generateWrongAnswers(q.a, q.q)]);
+    const storedOpts = (q.opts||[]).filter(Boolean);
+    const opts = shuffleArr([q.a, ...(storedOpts.length >= 2 ? storedOpts : generateWrongAnswers(q.a, q.q))]);
     const wrap = document.getElementById('mr-mc-wrap');
     wrap.innerHTML = '';
     opts.forEach(opt => {
