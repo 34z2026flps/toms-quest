@@ -8773,17 +8773,7 @@ function buildMathsConfig(fbKey, cfg, containerEl) {
 
   if (type === 'daily-review' || type === 'challenge') {
     // Quiz bank config
-    const yearRow = mkCfgRow('Year level');
-    const yearSel = document.createElement('select');
-    yearSel.id = 'mcfg-year-'+fbKey;
-    yearSel.style.cssText = 'flex:1;padding:6px 10px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
-    MATHS_YEARS.forEach(([val,lbl]) => {
-      const o = document.createElement('option'); o.value=val; o.textContent=lbl;
-      if (val === (cfg.year||'yr3')) o.selected=true;
-      yearSel.appendChild(o);
-    });
-    yearRow.appendChild(yearSel); container.appendChild(yearRow);
-
+    // Topic selector
     const topicRow = mkCfgRow('Topic');
     const topicSel = document.createElement('select');
     topicSel.id = 'mcfg-topic-'+fbKey;
@@ -8794,6 +8784,25 @@ function buildMathsConfig(fbKey, cfg, containerEl) {
       topicSel.appendChild(o);
     });
     topicRow.appendChild(topicSel); container.appendChild(topicRow);
+
+    // Subcategory (level) selector - populated from actual bank keys for selected topic
+    const levelRow = mkCfgRow('Level');
+    const levelSel = document.createElement('select');
+    levelSel.id = 'mcfg-year-'+fbKey;
+    levelSel.style.cssText = 'flex:1;padding:6px 10px;border-radius:8px;border:1.5px solid #e2e8f0;font-family:inherit;font-size:12px;outline:none';
+    function populateLevelSel(topicKey, savedYear) {
+      levelSel.innerHTML = '';
+      const cat = MATHS_BANK[topicKey];
+      if (!cat) return;
+      Object.entries(cat.subcategories).forEach(([key,sub]) => {
+        const o = document.createElement('option'); o.value=key; o.textContent=sub.label+' ('+sub.questions.length+' q)';
+        if (key === savedYear) o.selected=true;
+        levelSel.appendChild(o);
+      });
+    }
+    populateLevelSel(cfg.topic||'addition', cfg.year||'yr3');
+    topicSel.addEventListener('change', () => populateLevelSel(topicSel.value, ''));
+    levelRow.appendChild(levelSel); container.appendChild(levelRow);
 
     const countRow = mkCfgRow('Questions');
     const countSel = document.createElement('select');
@@ -8991,7 +9000,7 @@ function renderMRQuestion() {
   const pct = Math.round((mrIdx/mrQs.length)*100);
   document.getElementById('mr-prog-bar').style.width = pct+'%';
 
-  document.getElementById('mr-q-text').textContent = q.q;
+  document.getElementById('mr-q-text').textContent = q.q || q.question || 'Question '+(mrIdx+1);
   document.getElementById('mr-feedback').textContent = '';
   document.getElementById('mr-feedback').className = 'ma-feedback';
   document.getElementById('mr-next-btn').style.display = 'none';
