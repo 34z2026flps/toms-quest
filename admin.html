@@ -262,13 +262,14 @@ function rdTasks(){
       +'</div>'
       +'</div>'
       +'<div id="tpanel-images-'+t.id+'" style="display:none">'
-      +'<div style="background:#f8faff;border:2px dashed #c7d2fe;border-radius:10px;padding:12px;text-align:center;cursor:pointer" onclick="clickUpload('+t.id+')">'
-      +'<div style="font-size:22px;margin-bottom:4px">📁</div>'
-      +'<div style="font-size:12px;font-weight:700;color:#4f46e5">Upload images or PDFs</div>'
-      +'<input type="file" id="imgup-'+t.id+'" accept="image/*,.pdf" multiple style="display:none" onchange="handleImageUpload(event,'+t.id+')">'
+      +'<div style="background:#f8faff;border:2px dashed #c7d2fe;border-radius:10px;padding:12px;text-align:center;cursor:pointer" data-uid="'+t.id+'" onclick="clickUpload(this.dataset.uid)">'
+      +'<div style="font-size:20px;margin-bottom:4px">📁</div>'
+      +'<div style="font-size:12px;font-weight:700;color:#4f46e5">Upload images, PDFs, Word docs (multiple OK)</div>'
+      +'<div style="font-size:10px;color:#94a3b8;margin-top:2px">Add a label to each file so Tom knows what to open</div>'
+      +'<input type="file" id="imgup-'+t.id+'" accept="image/*,.pdf,.docx,.doc" multiple style="display:none" onchange="handleFileUpload(event,'+t.id+')">'
       +'</div>'
-      +'<div style="font-size:10px;color:#94a3b8;margin-top:6px">💡 Paste an image with Ctrl+V while Images tab is open</div>'
-      +'<div id="img-thumbs-'+t.id+'" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>'
+      +'<div style="font-size:10px;color:#94a3b8;margin:5px 0 4px">💡 Ctrl+V to paste an image directly</div>'
+      +'<div id="task-files-'+t.id+'"></div>'
       +'</div>'
       +'<div id="tpanel-quiz-'+t.id+'" style="display:none">'
       +'<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px">Build multiple choice questions:</div>'
@@ -289,6 +290,7 @@ function rdTasks(){
       +'<button class="btn sm" style="background:'+(t.done?'#dcfce7':'#f1f5f9')+';color:'+(t.done?'#16a34a':'#64748b')+'" onclick="tog('+t.id+')">'+(t.done?'✓ Done':'Mark done')+'</button>'
       +'</div>';
     c.appendChild(div);
+    initTaskFiles(t.id, t.activity_content||t.content||'');
   });
 }
 
@@ -341,7 +343,18 @@ function printDay(){
 
 function flush(){tasks.filter(t=>t.day_index===day).forEach(t=>{const f=id=>document.getElementById(id+t.id)?.value;if(f('tn'))t.name=f('tn');if(f('tm'))t.meta=f('tm');if(f('ts'))t.subject=f('ts');if(f('tx'))t.xp=parseInt(f('tx'))||20;if(f('tstep'))t.steps=parseInt(f('tstep'))||1;if(f('tl'))t.link=f('tl');if(f('tc'))t.activity_content=f('tc');if(f('tw'))t.min_words=parseInt(f('tw'))||50;const g=document.getElementById('tg'+t.id);if(g)t.unlocks_games=Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid);});}
 async function saveXP(){const xp=parseInt(document.getElementById('xpv').value)||0;const{error}=await db.from('quest_state').update({xp,updated_at:new Date()}).eq('id','tom');error?toast('Error: '+error.message):toast('XP saved ✓');}
-async function save(id){const f=fid=>document.getElementById(fid+id)?.value??'';const g=document.getElementById('tg'+id);const ug=g?Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid):[];const imgs=taskImages[id];const rawText=f('tc');const pf=promptFiles[id];let cv=rawText;if(imgs&&imgs.length||pf){const obj={text:rawText};if(imgs&&imgs.length)obj.images=imgs;if(pf)obj.promptFile=pf.data;cv=JSON.stringify(obj);}const tm=document.getElementById('tmode'+id)?.value||'';const u={name:f('tn'),meta:f('tm'),subject:f('ts'),xp:parseInt(f('tx'))||20,steps:parseInt(f('tstep'))||1,link:f('tl'),activity_content:setMode(cv,tm),min_words:parseInt(f('tw'))||50,unlocks_games:ug,updated_at:new Date()};const{error}=await db.from('tasks').update(u).eq('id',id);error?toast('Error: '+error.message):(Object.assign(tasks.find(t=>t.id===id)||{},u),toast('Saved ✓'));}
+async function save(id){
+  const f=fid=>document.getElementById(fid+id)?.value??'';
+  const g=document.getElementById('tg'+id);
+  const ug=g?Array.from(g.querySelectorAll('input:checked')).map(cb=>cb.dataset.gid):[];
+  const cv=buildTaskContent(id);
+  const u={name:f('tn'),meta:f('tm'),subject:f('ts'),xp:parseInt(f('tx'))||20,steps:parseInt(f('tstep'))||1,link:f('tl'),activity_content:cv,min_words:parseInt(f('tw'))||50,unlocks_games:ug,updated_at:new Date()};
+  const{error}=await db.from('tasks').update(u).eq('id',id);
+  if(error){toast('Error: '+error.message);return;}
+  Object.assign(tasks.find(t=>t.id===id)||{},u);
+  toast('Saved ✓');
+}
+
 async function addTask(){flush();const sub=document.getElementById('nsub').value;const nel=document.getElementById('nnm');const nm=nel.value.trim()||sub+' task';const{data,error}=await db.from('tasks').insert({day_index:day,subject:sub,name:nm,meta:META_DEF[sub]||'Complete the task',xp:XP_DEF[sub]||20,steps:1,progress:0,done:false,link:'',activity_content:'',min_words:50,unlocks_games:[]}).select().single();if(error){toast('Error: '+error.message);return;}tasks.push(data);nel.value='';rdTasks();toast(sub+' task added!');}
 async function del(id){if(!confirm('Delete?'))return;flush();const{error}=await db.from('tasks').delete().eq('id',id);if(error){toast('Error: '+error.message);return;}tasks=tasks.filter(t=>t.id!==id);rdTasks();toast('Deleted');}
 async function tog(id){const t=tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;t.progress=t.done?t.steps:0;const{error}=await db.from('tasks').update({done:t.done,progress:t.progress,updated_at:new Date()}).eq('id',id);if(error){toast('Error: '+error.message);return;}rdTasks();toast(t.done?'Marked done ✓':'Unmarked');}
@@ -1012,6 +1025,99 @@ function updateModeOpts(taskId) {
   const cur = sel.value;
   sel.innerHTML = getModeOpts(subj, cur);
 }
+
+// ══════════════════════════════════════════════════════════
+// UNIFIED FILE SYSTEM
+// All files/images stored in activity_content JSON:
+// { mode?, text?, files:[{name,type,data,label}] }
+// ══════════════════════════════════════════════════════════
+
+const taskFiles = {}; // in-memory: taskFiles[taskId] = [{name,type,data,label}]
+
+function getTaskContent(ac) {
+  if (!ac) return { mode:'', text:'', files:[] };
+  try {
+    const p = JSON.parse(ac);
+    // Handle legacy formats
+    const files = Array.isArray(p.files) ? p.files
+      : (p.images ? p.images.map(i=>({name:i.name||'image',type:'image',data:i.data,label:''}))
+      : (p.promptFile ? [{name:'prompt',type:'file',data:p.promptFile,label:'Prompt'}]
+      : []));
+    return { mode: p.mode||'', text: p.text||'', files };
+  } catch(e) { return { mode:'', text:ac, files:[] }; }
+}
+
+function buildTaskContent(taskId) {
+  const tc = document.getElementById('tc'+taskId);
+  const tm = document.getElementById('tmode'+taskId)?.value||'';
+  const text = tc ? tc.value : '';
+  const files = taskFiles[taskId] || [];
+  if (!tm && !files.length) return text; // plain text, no extras
+  const obj = {};
+  if (tm) obj.mode = tm;
+  if (text) obj.text = text;
+  if (files.length) obj.files = files;
+  return JSON.stringify(obj);
+}
+
+function initTaskFiles(taskId, ac) {
+  const parsed = getTaskContent(ac);
+  taskFiles[taskId] = parsed.files || [];
+  // Also populate textarea with text
+  const tc = document.getElementById('tc'+taskId);
+  if (tc && parsed.text && !tc.value) tc.value = parsed.text;
+  renderTaskFiles(taskId);
+}
+
+function handleFileUpload(event, taskId) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  if (!taskFiles[taskId]) taskFiles[taskId] = [];
+  let done = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const type = file.type.startsWith('image/') ? 'image'
+                 : file.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'file';
+      taskFiles[taskId].push({ name:file.name, type, data:e.target.result, label:'' });
+      done++;
+      if (done === files.length) { renderTaskFiles(taskId); toast(done + ' file'+(done>1?'s':'')+' added!'); }
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+
+function renderTaskFiles(taskId) {
+  const c = document.getElementById('task-files-'+taskId);
+  if (!c) return;
+  const files = taskFiles[taskId] || [];
+  c.innerHTML = '';
+  if (!files.length) {
+    c.innerHTML = '<p style="font-size:11px;color:#94a3b8;padding:4px 0">No files attached yet. Each file gets a label so Tom knows what it is.</p>';
+    return;
+  }
+  files.forEach((f, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 8px;background:#f8fafc;border-radius:9px;border:1.5px solid #e2e8f0;margin-bottom:5px';
+    const icon = f.type==='image'?'🖼️':f.type==='pdf'?'📄':'📎';
+    const previewHtml = f.type==='image'
+      ? '<img src="'+f.data+'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0" data-i="'+i+'" data-tid="'+taskId+'" onclick="wopf(this)">'
+      : '<span style="font-size:24px;flex-shrink:0">'+icon+'</span>';
+    wrap.innerHTML = previewHtml
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:11px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1e293b">'+esc(f.name)+'</div>'
+      +'<input value="'+esc(f.label||'')+'" placeholder="Label for Tom (e.g. Page 1, Worksheet A)…" '
+      +'style="width:100%;padding:3px 7px;border-radius:5px;border:1.5px solid #e2e8f0;font-size:11px;margin-top:3px;font-family:inherit;outline:none" '
+      +'oninput="taskFiles['+taskId+']['+i+'].label=this.value"></div>'
+      +'<button onclick="removeTaskFile('+taskId+','+i+')" style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">✕</button>';
+    c.appendChild(wrap);
+  });
+}
+
+function wopf(el){const f=taskFiles[el.dataset.tid][el.dataset.i];if(f)wop(f.data);}
+function wop(src) { const w=window.open(); w.document.write('<img src="'+src+'" style="max-width:100%;max-height:100vh">'); }
+function removeTaskFile(taskId, i) { if(taskFiles[taskId]){taskFiles[taskId].splice(i,1);renderTaskFiles(taskId);} }
 
 let qbModalTaskId=null;
 function qbInit(){const sel=document.getElementById('qbm-cat');if(!sel||sel.options.length)return;Object.entries(MATHS_BANK).forEach(([id,cat])=>{const o=document.createElement('option');o.value=id;o.textContent=cat.icon+' '+cat.label;sel.appendChild(o);});qbmLoadSubs();}
